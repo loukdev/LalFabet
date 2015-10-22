@@ -34,7 +34,7 @@ INSERT INTO `t_abonnement_abo` (`abo_id`, `abo_debut`, `abo_fin`, `cpt_pseudo`, 
 -- Dumping data for table `t_actualite_act`
 --
 INSERT INTO `t_actualite_act` (`cpt_pseudo`, `act_titre`, `act_contenu`, `act_date`) VALUES
-('loukiluk', 'Le site est en construction !', 'Bienvenue sur le site de LalFabet qui est actuellement en développement !', CURRENT_DATE())
+('loukiluk', 'Le site est en construction !', 'Bienvenue sur le site de LalFabet qui est actuellement en développement !', CURRENT_DATE());
 
 --
 -- Dumping data for table `t_commande_cmd`

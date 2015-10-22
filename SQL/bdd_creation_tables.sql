@@ -42,6 +42,36 @@ CREATE TABLE IF NOT EXISTS `t_groupe_grp` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `t_adherent_adh`
+--
+
+CREATE TABLE IF NOT EXISTS `t_adherent_adh` (
+  `cpt_pseudo` varchar(128) NOT NULL,
+  `adh_nom` varchar(128) NOT NULL,
+  `adh_prenom` varchar(128) NOT NULL,
+  `adh_date_naissance` date NOT NULL,
+  `adh_rue` varchar(128) NOT NULL,
+  `adh_num_rue` int(11) NOT NULL,
+  `adh_code_postal` char(5) NOT NULL,
+  `adh_ville` varchar(128) NOT NULL,
+  `adh_telephone1` char(10) NOT NULL,
+  `adh_telephone2` char(10) default NULL,
+  `adh_telephone3` char(10) default NULL,
+  `adh_mail` varchar(128) NOT NULL,
+  PRIMARY KEY  (`cpt_pseudo`),
+  KEY `adh_cpt_FK` (`cpt_pseudo`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Constraints for table `t_adherent_adh`
+--
+ALTER TABLE `t_adherent_adh`
+  ADD CONSTRAINT `adh_cpt_FK` FOREIGN KEY (`cpt_pseudo`) REFERENCES `t_compte_cpt` (`cpt_pseudo`)
+  ON DELETE CASCADE;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `t_abonnement_abo`
 --
 
@@ -52,9 +82,18 @@ CREATE TABLE IF NOT EXISTS `t_abonnement_abo` (
   `cpt_pseudo` varchar(128) NOT NULL,
   `grp_id` int(11) NOT NULL,
   PRIMARY KEY  (`abo_id`),
-  KEY `abo_adh_FK` (`cpt_pseudo`),
-  KEY `abo_grp_FK` (`grp_id`)
+  KEY `abo_grp_FK` (`grp_id`),
+  KEY `abo_adh_FK` (`cpt_pseudo`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Constraints for table `t_abonnement_abo`
+--
+ALTER TABLE `t_abonnement_abo`
+  ADD CONSTRAINT `abo_grp_FK` FOREIGN KEY (`grp_id`) REFERENCES `t_groupe_grp` (`grp_id`)
+  ON DELETE CASCADE,
+  ADD CONSTRAINT `abo_adh_FK` FOREIGN KEY (`cpt_pseudo`) REFERENCES `t_adherent_adh` (`cpt_pseudo`)
+  ON DELETE CASCADE;
 
 -- --------------------------------------------------------
 
@@ -72,27 +111,12 @@ CREATE TABLE IF NOT EXISTS `t_actualite_act` (
   KEY `act_adh_FK` (`cpt_pseudo`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
--- --------------------------------------------------------
-
 --
--- Table structure for table `t_adherent_adh`
+-- Constraints for table `t_actualite_act`
 --
-
-CREATE TABLE IF NOT EXISTS `t_adherent_adh` (
-  `cpt_pseudo` varchar(128) NOT NULL,
-  `adh_nom` varchar(128) NOT NULL,
-  `adh_prenom` varchar(128) NOT NULL,
-  `adh_date_naissance` date NOT NULL,
-  `adh_rue` varchar(128) NOT NULL,
-  `adh_num_rue` int(11) NOT NULL,
-  `adh_code_postal` char(5) NOT NULL,
-  `adh_ville` varchar(128) NOT NULL,
-  `adh_telephone1` char(10) NOT NULL,
-  `adh_telephone2` char(10) default NULL,
-  `adh_telephone3` char(10) default NULL,
-  `adh_mail` varchar(128) NOT NULL,
-  PRIMARY KEY  (`cpt_pseudo`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+ALTER TABLE `t_actualite_act`
+  ADD CONSTRAINT `act_adh_FK` FOREIGN KEY (`cpt_pseudo`) REFERENCES `t_adherent_adh` (`cpt_pseudo`)
+  ON DELETE CASCADE;
 
 -- --------------------------------------------------------
 
@@ -134,10 +158,21 @@ CREATE TABLE IF NOT EXISTS `t_commande_item_cit` (
   `cpt_pseudo` varchar(128) NOT NULL,
   `cit_quantite` int(11) NOT NULL,
   PRIMARY KEY  (`cit_id`),
+  KEY `cit_ite_FK` (`ite_id`),
   KEY `cit_adh_FK` (`cpt_pseudo`),
-  KEY `cit_cmd_FK` (`cmd_debut`),
-  KEY `cit_ite_FK` (`ite_id`)
+  KEY `cit_cmd_FK` (`cmd_debut`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Constraints for table `t_commande_item_cit`
+--
+ALTER TABLE `t_commande_item_cit`
+  ADD CONSTRAINT `cit_ite_FK` FOREIGN KEY (`ite_id`) REFERENCES `t_item_ite` (`ite_id`)
+  ON DELETE CASCADE,
+  ADD CONSTRAINT `cit_adh_FK` FOREIGN KEY (`cpt_pseudo`) REFERENCES `t_adherent_adh` (`cpt_pseudo`)
+  ON DELETE CASCADE,
+  ADD CONSTRAINT `cit_cmd_FK` FOREIGN KEY (`cmd_debut`) REFERENCES `t_commande_cmd` (`cmd_debut`)
+  ON DELETE CASCADE;
 
 -- --------------------------------------------------------
 
@@ -162,8 +197,16 @@ CREATE TABLE IF NOT EXISTS `t_equipement_eqp` (
   `eqp_nom` varchar(128) NOT NULL,
   `sal_nom` varchar(128) default NULL,
   `eqp_niveau` int(11) NOT NULL,
-  PRIMARY KEY  (`eqp_id`)
+  PRIMARY KEY  (`eqp_id`),
+  KEY `eqp_sal_FK` (`sal_nom`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Constraints for table `t_equipement_eqp`
+--
+ALTER TABLE `t_equipement_eqp`
+  ADD CONSTRAINT `eqp_sal_FK` FOREIGN KEY (`sal_nom`) REFERENCES `t_salle_sal` (`sal_nom`)
+  ON DELETE CASCADE;
 
 -- --------------------------------------------------------
 
@@ -177,9 +220,18 @@ CREATE TABLE IF NOT EXISTS `t_reservation_equipement_req` (
   `req_horaire` int(11) NOT NULL,
   `cpt_pseudo` varchar(128) NOT NULL,
   PRIMARY KEY  (`eqp_id`,`req_jour`,`req_horaire`),
-  KEY `req_adh_FK` (`cpt_pseudo`),
-  KEY `req_eqp_FK` (`eqp_id`)
+  KEY `req_eqp_FK` (`eqp_id`),
+  KEY `req_adh_FK` (`cpt_pseudo`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Constraints for table `t_reservation_equipement_req`
+--
+ALTER TABLE `t_reservation_equipement_req`
+  ADD CONSTRAINT `req_eqp_FK` FOREIGN KEY (`eqp_id`) REFERENCES `t_equipement_eqp` (`eqp_id`)
+  ON DELETE CASCADE,
+  ADD CONSTRAINT `req_adh_FK` FOREIGN KEY (`cpt_pseudo`) REFERENCES `t_adherent_adh` (`cpt_pseudo`)
+  ON DELETE CASCADE;
 
 -- --------------------------------------------------------
 
@@ -193,63 +245,9 @@ CREATE TABLE IF NOT EXISTS `t_reservation_salle_rsa` (
   `sal_nom` varchar(128) NOT NULL,
   `cpt_pseudo` varchar(128) NOT NULL,
   PRIMARY KEY  (`rsa_jour`,`rsa_horaire`,`sal_nom`),
-  KEY `rsa_adh_FK` (`cpt_pseudo`),
-  KEY `rsa_sal_FK` (`sal_nom`)
+  KEY `rsa_sal_FK` (`sal_nom`),
+  KEY `rsa_adh_FK` (`cpt_pseudo`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Constraints for dumped tables
---
-
---
--- Constraints for table `t_abonnement_abo`
---
-ALTER TABLE `t_abonnement_abo`
-  ADD CONSTRAINT `abo_grp_FK` FOREIGN KEY (`grp_id`) REFERENCES `t_groupe_grp` (`grp_id`)
-  ON DELETE CASCADE,
-  ADD CONSTRAINT `abo_adh_FK` FOREIGN KEY (`cpt_pseudo`) REFERENCES `t_adherent_adh` (`cpt_pseudo`)
-  ON DELETE CASCADE;
-
---
--- Constraints for table `t_actualite_act`
---
-ALTER TABLE `t_actualite_act`
-  ADD CONSTRAINT `act_adh_FK` FOREIGN KEY (`cpt_pseudo`) REFERENCES `t_adherent_adh` (`cpt_pseudo`)
-  ON DELETE CASCADE;
-
---
--- Constraints for table `t_adherent_adh`
---
-ALTER TABLE `t_adherent_adh`
-  ADD CONSTRAINT `adh_cpt_FK` FOREIGN KEY (`cpt_pseudo`) REFERENCES `t_compte_cpt` (`cpt_pseudo`)
-  ON DELETE CASCADE;
-
---
--- Constraints for table `t_commande_item_cit`
---
-ALTER TABLE `t_commande_item_cit`
-  ADD CONSTRAINT `cit_ite_FK` FOREIGN KEY (`ite_id`) REFERENCES `t_item_ite` (`ite_id`)
-  ON DELETE CASCADE,
-  ADD CONSTRAINT `cit_adh_FK` FOREIGN KEY (`cpt_pseudo`) REFERENCES `t_adherent_adh` (`cpt_pseudo`)
-  ON DELETE CASCADE,
-  ADD CONSTRAINT `cit_cmd_FK` FOREIGN KEY (`cmd_debut`) REFERENCES `t_commande_cmd` (`cmd_debut`)
-  ON DELETE CASCADE;
-
---
--- Constraints for table `t_reservation_equipement_req`
---
-ALTER TABLE `t_reservation_equipement_req`
-  ADD CONSTRAINT `req_eqp_FK` FOREIGN KEY (`eqp_id`) REFERENCES `t_equipement_eqp` (`eqp_id`)
-  ON DELETE CASCADE,
-  ADD CONSTRAINT `req_adh_FK` FOREIGN KEY (`cpt_pseudo`) REFERENCES `t_adherent_adh` (`cpt_pseudo`)
-  ON DELETE CASCADE;
-
---
--- Constraints for table `t_equipement_eqp`
---
-ALTER TABLE `t_equipement_eqp`
-  ADD CONSTRAINT `eqp_sal_FK` FOREIGN KEY (`sal_nom`) REFERENCES `t_salle_sal` (`sal_nom`)
-  ON DELETE CASCADE;
 
 --
 -- Constraints for table `t_reservation_salle_rsa`
@@ -259,4 +257,9 @@ ALTER TABLE `t_reservation_salle_rsa`
   ON DELETE CASCADE,
   ADD CONSTRAINT `rsa_adh_FK` FOREIGN KEY (`cpt_pseudo`) REFERENCES `t_adherent_adh` (`cpt_pseudo`)
   ON DELETE CASCADE;
+
+--
+-- Constraints for dumped tables
+--
+
 
