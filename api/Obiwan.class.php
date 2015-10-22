@@ -2,7 +2,7 @@
 
 class Obiwan
 {
-  static var $pdo = NULL;
+  static $pdo = NULL;
 
   private function __construct()
   {
@@ -21,5 +21,3 @@ class Obiwan
     return $pdo;
   }
 }
-
-?>
