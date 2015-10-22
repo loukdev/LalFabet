@@ -2,10 +2,10 @@
 
 interface IModel
 {
-	public function save($bdd);
-	public function delete($bdd);
+	public function save();
+	public function delete();
 
 	public function __get($var);
 
-	public static function getAll($bdd);
+	public static function getAll();
 }

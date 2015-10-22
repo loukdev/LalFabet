@@ -1,22 +1,19 @@
 <?php
-include_once("api/IModel.class.php");
+include_once('api/bdd.php');
+include_once('api/IModel.class.php');
 
 class ModelArticle implements IModel
 {
 	protected $data;
 
-	public function __construct($id, $pseudo, $title, $content, $date)
+	public function __construct($array)
 	{
-		$this->data['act_id'] = $id;
-		$this->data['cpt_pseudo'] = $pseudo;
-		$this->data['act_title'] = $title;
-		$this->data['act_content'] = $content;
-		$this->data['act_date'] = $date;
+		$this->data = $array;
 	}
 
-	public static function getAll($bdd)
+	public static function getAll()
 	{
-		return $bdd->query("SELECT * FROM t_actualite_act")->fetchAll();
+		return Obiwan::PDO()->query("SELECT * FROM t_actualite_act")->fetchAll();
 	}
 
 	public function __get($var)
@@ -27,22 +24,30 @@ class ModelArticle implements IModel
 		return $this->data[$var];
 	}
 
-	public function save($bdd)
+	public function save()
 	{
-		foreach($this->data as $data) {
-			$values = (empty($values) ? '' : $values . ', ') . (is_int($data) ? $data : "'$data'");
-		}
+		$act = Obiwan::PDO()->prepare("INSERT INTO `t_actualite_act`
+		  (`act_id`, 
+		  `cpt_pseudo`,
+		  `act_titre`,
+		  `act_contenu`,
+		  `act_date`) VALUES
+		  ( :act_id
+		  , :cpt_pseudo
+		  , :act_titre
+		  , :act_contenu
+		  , :act_date)");
 
-		$result = $bdd->query('INSERT INTO t_actualite_act VALUES ('. $values .')');
+		$result = $act->execute($this->data);
 		if(!$result) {
 			throw new Exception(__CLASS__ . '::save : insert query failed.');
 		} else {
-			return $result->fetch(); }
+			return; }
 	}
 
-	public function delete($bdd)
+	public function delete()
 	{
-		$result = $bdd->query('DELETE FROM t_actualite_act WHERE act_id = '. $this->data["act_id"]);
+		$result = Obiwan::PDO()->query('DELETE FROM t_actualite_act WHERE act_id = '. $this->data["act_id"]);
 		if(!$result) {
 			throw new Exception(__CLASS__ . '::delete : delete query failed.');
 		} else {

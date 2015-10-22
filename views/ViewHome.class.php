@@ -1,18 +1,14 @@
 <?php
-include_once("api/IView.class.php");
+include_once('api/IView.class.php');
+include_once('models/ModelArticle.class.php');
 
 class ViewHome implements IView
 {
-	protected $model;
-
-	public function __construct($model)
-	{
-		$this->model = $model;
-	}
+	public function __construct() {}
 
 	public function show()
 	{
-		$articles = $this->model;
+		$articles = ModelArticle::getAll();
 
 		ob_start();
 

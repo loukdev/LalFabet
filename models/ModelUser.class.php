@@ -1,7 +1,7 @@
 <?php
 include_once("api/IModel.class.php");
 
-class ModelSignIn implements IModel
+class ModelUser implements IModel
 {
     public function __get($var)
 	{

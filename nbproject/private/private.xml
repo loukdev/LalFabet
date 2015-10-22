@@ -3,8 +3,13 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/D:/Programmes/Xampp/htdocs/V1/test.php</file>
-            <file>file:/D:/Programmes/Xampp/htdocs/V1/models/ModelArticle.class.php</file>
+            <file>file:/home/louk/Teulioù/Etudes/SI/Fraboulet_Blanleuil_Fablab/V1/index.php</file>
+            <file>file:/home/louk/Teulioù/Etudes/SI/Fraboulet_Blanleuil_Fablab/V1/views/ViewHome.class.php</file>
+            <file>file:/home/louk/Teulioù/Etudes/SI/Fraboulet_Blanleuil_Fablab/V1/views/ViewSignIn.class.php</file>
+            <file>file:/home/louk/Teulioù/Etudes/SI/Fraboulet_Blanleuil_Fablab/V1/models/ModelSignIn.class.php</file>
+            <file>file:/home/louk/Teulioù/Etudes/SI/Fraboulet_Blanleuil_Fablab/V1/models/ModelArticle.class.php</file>
+            <file>file:/home/louk/Teulioù/Etudes/SI/Fraboulet_Blanleuil_Fablab/V1/api/bdd.php</file>
+            <file>file:/home/louk/Teulioù/Etudes/SI/Fraboulet_Blanleuil_Fablab/V1/api/Obiwan.class.php</file>
         </group>
     </open-files>
 </project-private>
