@@ -1,0 +1,154 @@
+/*
+        ===========
+        Décorations
+        ===========
+*/
+
+* {
+        font-family: sans-serif;
+}
+
+body {
+        background: url('../images/pattern_blue.png');
+}
+
+#global {
+        background: white;
+}
+
+header {
+        color: white;
+        font-size: 1.5em;
+}
+
+nav {
+        background: #01B0FF;
+}
+nav ul {
+}
+nav ul li
+{
+        border: none;
+}
+nav ul li a {
+        color: white;
+        border: none;
+
+        text-decoration: none;
+}
+nav ul li a:hover {
+        background: #A0CFFF;
+
+        text-decoration: none;
+}
+nav ul li a {
+        transition: background .3s ease-in-out;
+        -moz-transition: background .3s ease-in-out;
+        -webkit-transition: background .3s ease-in-out;
+}
+
+section article {
+        background: white;
+}
+section article h1 {
+        color: #00A0EF;
+		font-family: Verdana;
+}
+
+footer {
+        background: #7FC6BC;
+}
+
+/*
+        ==============
+        Positionnement        
+        ==============
+*/
+
+html, body {
+		margin: 0px;
+		height: 100%;
+}
+
+#global {
+        width: 80%;
+		height: 100%;
+
+		min-width: 768px;
+        max-width: 1280px;
+
+        margin-left: auto;
+        margin-right: auto;
+
+		display: table;
+}
+
+header {
+        margin: 0px;
+
+        text-align: center;
+}
+
+nav {
+        height: 60px;
+        margin: 0px;
+}
+
+nav ul {
+        margin: 20px;
+        display: inline-block;
+}
+nav ul li {
+        display: inline;
+
+        width: 500px;
+}
+nav ul li a {
+        width: 500px;
+
+        padding: 4px 8px;
+}
+
+section {
+        padding: 0px;
+
+		display: table-row;
+		height: 100%;
+}
+section aside {
+	float: right;
+
+	height: 100%;
+
+	padding-left: 8px;
+	padding-right: 8px;
+}
+section aside ul {
+	list-style-type: none;
+}
+section > p {
+	padding-left: 16px;
+}
+section article {
+        margin: 4px 0px 8px 0px;
+        padding: 4px 16px;
+}
+section article h1 {
+        margin: 0px;
+}
+section article p {
+        margin-bottom: 0px;
+
+        text-align: justify;
+}
+
+footer {
+    display: table-row;
+}
+footer ul {
+        text-align: center;
+        padding: 1px 0 1px 0;
+}
+footer ul li {
+        display: inline;
+}
