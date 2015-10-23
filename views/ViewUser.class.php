@@ -1,7 +1,7 @@
 <?php
 include_once('api/IView.class.php');
 
-class ViewSignIn implements IView
+class ViewUser implements IView
 {
 	private $model = NULL;
 
@@ -23,14 +23,12 @@ class ViewSignIn implements IView
 		{
 			foreach ($this->model->getInfos()['errors'] as $err)
 			{
-				echo '<span style="color: red;">' . $err . '</span><br/>';
+				echo '<p style="color: red;">' . $err . '</p>';
 			}
-
-			include_once('templates/signin_form.php');
 		}
 		else
 		{
-			include_once('templates/signin_success.php');
+			include_once('templates/user_section.php');
 		}
 
 		echo '</section>';
