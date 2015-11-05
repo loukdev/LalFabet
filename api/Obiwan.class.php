@@ -2,22 +2,18 @@
 
 class Obiwan
 {
-  static $pdo = NULL;
+	private function __construct() {}
+	
+	public static function PDO()
+	{
+	static $pdo = NULL;
+		if (is_null($pdo))
+		{
+			$pdo = new PDO("mysql:dbname=fablab;host=localhost"
+								, "root"
+								, "");
+		}
 
-  private function __construct()
-  {
-    
-  }
-  
-  public static function PDO()
-  {
-    if (is_null($pdo))
-    {
-      $pdo = new PDO("mysql:dbname=zfl3-blanlear;host=obiwan.univ-brest.fr"
-                , "blanlear"
-                , "1mwwtaq5");
-    }
-
-    return $pdo;
-  }
+		return $pdo;
+	}
 }
