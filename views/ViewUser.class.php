@@ -19,9 +19,9 @@ class ViewUser implements IView
 
 		echo '<section>';
 
-		if (count($this->model->getInfos()['errors']))
+		if (count($this->get('errors')))
 		{
-			foreach ($this->model->getInfos()['errors'] as $err)
+			foreach ($this->get('errors') as $err)
 			{
 				echo '<p style="color: red;">' . $err . '</p>';
 			}
@@ -41,9 +41,11 @@ class ViewUser implements IView
 
 	private function get($key)
 	{
-		if (isset($this->model->getInfos()[$key])) 
-			return $this->model->getInfos()[$key];
+		$tab = $this->model->getInfos();
+		if (isset($tab[$key])) 
+			return $tab[$key];
 		else
 			return '';
 	}
+	
 }

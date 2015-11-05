@@ -8,12 +8,18 @@
             <?php } 
                   else
                   {
-                    ?><a href="?disconnect">Se déconnecter</a>
+                    ?><a href="?disconnect">Se déconnecter (<?php echo $_SESSION['cpt_pseudo']; ?>)</a>
             <?php } ?>
             </li>
 
             <br />
-
+<?php
+if (isset($_SESSION['cpt_pseudo']) and $_SESSION['cpt_pseudo'] != '')
+{
+?>
 						<li><a href="">Ajouter une publication</a></li>
+<?php
+}
+?>
 					</ul>
 				</aside>

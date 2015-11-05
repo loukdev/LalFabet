@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 
-require_once('api/Imodel.class.php');
+require_once('api/IModel.class.php');
 require_once('api/Obiwan.class.php');
 require_once('api/utility.php');
 
@@ -61,6 +61,7 @@ class ModelUser implements IModel
 		$this->post_infos = array_merge(array(
 				'cpt_pseudo' => ''
 			, 'cpt_password' => ''
+			, 'cpt_password_verif' => ''
 			, 'adh_prenom' => ''
 			, 'adh_nom' => ''
 			, 'adh_date_naissance' => ''
@@ -86,6 +87,7 @@ class ModelUser implements IModel
 		if (are_all_set($this->post_infos, array(
 				'cpt_pseudo'
 			, 'cpt_password'
+			, 'cpt_password_verif'
 			, 'adh_prenom'
 			, 'adh_nom'
 			, 'adh_date_naissance'
@@ -114,6 +116,7 @@ class ModelUser implements IModel
 	{
 		if (strlen($this->post_infos['cpt_pseudo']) < 1
 			or strlen($this->post_infos['cpt_password']) < 1
+			or strlen($this->post_infos['cpt_password_verif']) < 1
 			or strlen($this->post_infos['adh_prenom']) < 1
 			or strlen($this->post_infos['adh_nom']) < 1
 			or strlen($this->post_infos['adh_date_naissance']) < 1
@@ -121,38 +124,59 @@ class ModelUser implements IModel
 			or strlen($this->post_infos['adh_code_postal']) < 1
 			or strlen($this->post_infos['adh_ville']) < 1
 			or strlen($this->post_infos['adh_telephone1']) < 1
-			or strlen($this->post_infos['adh_mail']) < 1
-			or strlen($this->post_infos['adh_num_rue']) < 1)
+			or strlen($this->post_infos['adh_mail']) < 1)
 		{
 			array_push($this->errors, 'Tous les champs avec une étoile sont à renseigner.');
 		}
 
+		// verification mot de passe
+		if ($this->post_infos['cpt_password'] != $this->post_infos['cpt_password_verif'])
+		{
+			array_push($this->errors, 'Les deux mots de passe ne correspondent pas.');
+		}
+		
+		// verification numéros de téléphone
+    $nombre_num_valides = 0;
+		if (strlen($this->post_infos['adh_telephone1']) > 0)
+		{
+      if (strlen($this->post_infos['adh_telephone1']) != 10)
+        array_push($this->errors, 'Téléphone 1 invalide.');
+      else
+        $nombre_num_valides++;
+		}
+		if (strlen($this->post_infos['adh_telephone2']) > 0)
+		{
+      if (strlen($this->post_infos['adh_telephone2']) != 10)
+        array_push($this->errors, 'Téléphone 2 invalide.');
+      else
+        $nombre_num_valides++;
+		}
+		if (strlen($this->post_infos['adh_telephone3']) > 0)
+		{
+      if (strlen($this->post_infos['adh_telephone3']) != 10)
+        array_push($this->errors, 'Téléphone 3 invalide.');
+      else
+        $nombre_num_valides++;
+		}
 
 		// verification date de naissance
 		$time = strtotime($this->post_infos['adh_date_naissance']);
-		if ($time != false or $time > time())
+    $diff_time = 0;
+		if ($time != false and ($diff_time = time() - $time) > 0)
 		{
-			$this->post_infos['adh_date_naissance'] = date('Y-m-d', $time);
+      if ($diff_time < 18 * 356 * 24 * 3600 && $nombre_num_valides < 2)
+      {
+        array_push($this->errors, 'Si vous avez moins de 18 ans, vous avez besoin de deux numéros de téléphone.');
+      }
+      else      
+        $this->post_infos['adh_date_naissance'] = date('Y-m-d', $time);
 		}
 		else
 		{
 			array_push($this->errors, 'Date invalide.');
 		}
 
-		// verification numéros de téléphone
-		if (strlen($this->post_infos['adh_telephone1']) > 0 && strlen($this->post_infos['adh_telephone1']) != 10)
-		{
-			array_push($this->errors, 'Téléphone 1 invalide.');
-		}
-		if (strlen($this->post_infos['adh_telephone2']) > 0 && strlen($this->post_infos['adh_telephone2']) != 10)
-		{
-			array_push($this->errors, 'Téléphone 2 invalide.');
-		}
-		if (strlen($this->post_infos['adh_telephone3']) > 0 && strlen($this->post_infos['adh_telephone3']) != 10)
-		{
-			array_push($this->errors, 'Téléphone 3 invalide.');
-		}
-
+    
 		// vérification adresse mail
 		if (!preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $this->post_infos['adh_mail']))
 		{
@@ -179,14 +203,18 @@ class ModelUser implements IModel
 			$cpt = $db->prepare($this->add_cpt_query);
 			if (!$cpt->execute(array( 'cpt_pseudo' => $this->post_infos['cpt_pseudo']
 														  , 'cpt_password' =>  $this->post_infos['cpt_password'])))
-				throw new Exception ("Une erreur serveur est survenue. " . $cpt->errorInfo()[2]);
-				
+			{
+				$err = $cpt->errorInfo();
+				throw new Exception ("Une erreur serveur est survenue. " . $err[2]);
+			}				
 			// ajout à t_adherent_adh
 			$adh = $db->prepare($this->add_adh_query);
 			if (!$adh->execute(
-					poor_array_diff_key($this->post_infos, array('cpt_password' => ''))))
-				throw new Exception ("Une erreur serveur est survenue. " . $adh->errorInfo()[2]);
-
+					poor_array_diff_key($this->post_infos, array('cpt_password' => '', 'cpt_password_verif' => ''))))
+			{
+				$err = $adh->errorInfo();
+				throw new Exception ("Une erreur serveur est survenue. " . $err[2]);
+			}
 
 			// transaction terminée sans erreurs
 			$db->commit();
@@ -233,7 +261,80 @@ class ModelUser implements IModel
 
 	public static function getUser($username)
 	{
+		return ModelUser::getUserPrivate($username, true);
+	}
+	
+	private static function getUserPrivate($username, $verif)
+	{
 		$ret = new ModelUser(array());
+		// si verif, alors verifier le droit d'acceder a ce compte
+		if ($verif)
+		{
+			if (!isset($_SESSION['cpt_pseudo']))
+			{
+				array_push($ret->errors, "Vous n'êtes pas connecté.");
+		$ret->post_infos = array_merge($ret->post_infos, array('errors' => $ret->errors));
+		return $ret;
+			}
+			
+			if ($_SESSION['cpt_pseudo'] != $username)
+			{
+					
+				// récupération du groupe de l'utilisateur
+				$db = Obiwan::PDO();
+				$q = $db->query("SELECT `grp_id`
+												FROM `t_groupe_grp`
+												NATURAL JOIN `t_abonnement_abo`
+												WHERE `cpt_pseudo` = '" . $_SESSION['cpt_pseudo'] . "'
+															AND `abo_fin` > NOW()");
+															
+				// pas d'abonnement, pas de droit
+				if (!is_null($q))
+				{
+					array_push($ret->errors, "Votre abonnement n'est pas à jour.");
+		$ret->post_infos = array_merge($ret->post_infos, array('errors' => $ret->errors));
+		return $ret;
+				}
+			
+				$res = $q->fetchAll();
+				switch ($res['grp_id'])
+				{
+					// pas de droit pour les petits/grands debrouillards
+					case Obiwan::GROUP_SMALL:
+					case Obiwan::GROUP_BIG: array_push($this->errors, "Vous n'avez pas les droits pour faire cela."); return;
+
+					// un animateur ne peut que accéder aux petits/grands debrouillards
+					case Obiwan::GROUP_ANIMATOR:
+					{
+						$q2 = $db->query("SELECT `grp_id`
+									FROM `t_groupe_grp`
+									NATURAL JOIN `t_abonnement_abo`
+									WHERE `cpt_pseudo` = '" . $username . "'
+												AND `abo_fin` > NOW()");
+
+						// pas d'abonnement, pas de droit
+						if (!is_null($q))
+						{
+							array_push($ret->errors, "Erreur.");
+							return $ret;
+						}
+						$res2 = $q2->fetchAll();
+						if ($res2['grp_id'] != Obiwan::GROUP_SMALL && $res2['grp_id'] != Obiwan::GROUP_BIG)
+						{
+							array_push($ret->errors, "Vous n'avez pas les droits pour faire cela.");
+		$ret->post_infos = array_merge($ret->post_infos, array('errors' => $ret->errors));
+		return $ret;
+						}
+					}
+					
+					// accès à tout pour le reste
+					case Obiwan::GROUP_MANAGER:
+					case Obiwan::GROUP_ADMIN:
+					default: break;
+				}
+			}
+		}
+		
 		try
 		{
 			$db = Obiwan::PDO();
@@ -260,17 +361,17 @@ class ModelUser implements IModel
 		}
 		else
 		{
-			$ret->post_infos = $ret->query_results->fetchAll()[0];
+			$arr = $ret->query_results->fetchAll();
+			$ret->post_infos = $arr[0];
 		}
-
+		
 		$ret->post_infos = array_merge($ret->post_infos, array('errors' => $ret->errors));
-
 		return $ret;
 	}
 
 	public static function tryConnect($array)
 	{
-		$ret = ModelUser::getUser($array['cpt_pseudo']);
+		$ret = ModelUser::getUserPrivate($array['cpt_pseudo'], false);
 		if (count($ret->errors) < 1)
 		{
 			if ($array['cpt_password'] != $ret->post_infos['cpt_password'])

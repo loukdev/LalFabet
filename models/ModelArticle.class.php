@@ -13,7 +13,21 @@ class ModelArticle implements IModel
 
 	public static function getAll()
 	{
-		return Obiwan::PDO()->query("SELECT * FROM t_actualite_act")->fetchAll();
+		try
+		{
+			$db = Obiwan::PDO();
+			$db->query("SET NAMES 'utf8'");
+			$q  = $db->query("SELECT * FROM t_actualite_act");;
+			if (!$q)
+				throw new Exception("Nope");
+			else
+				return $q->fetchAll();
+				
+		}
+		catch (Exception $e)
+		{
+			return array();
+		}
 	}
 
 	public function __get($var)

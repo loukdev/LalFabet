@@ -117,7 +117,7 @@ section {
 }
 section aside {
 	float: right;
-
+	width: 200px;
 	height: 100%;
 
 	padding-left: 8px;
@@ -164,7 +164,7 @@ section > form > label
 {
     text-align: right;
     display: inline-block;
-    width: 150px;
+    width: 200px;
     margin-left: 10px;
     margin-top: 3px;
 }

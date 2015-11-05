@@ -23,11 +23,14 @@ class ViewConnect implements IView
 		ob_end_flush();
 	}
 
+
 	private function get($key)
-	{		
-		if (isset($this->model->getInfos()[$key])) 
-			return $this->model->getInfos()[$key];
+	{
+		$tab = $this->model->getInfos();
+		if (isset($tab[$key])) 
+			return $tab[$key];
 		else
 			return '';
 	}
+
 }
