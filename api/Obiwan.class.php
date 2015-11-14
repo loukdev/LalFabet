@@ -6,12 +6,13 @@ class Obiwan
 	
 	public static function PDO()
 	{
-	static $pdo = NULL;
+		static $pdo = NULL;
 		if (is_null($pdo))
 		{
-			$pdo = new PDO("mysql:dbname=zfl3-blanlear;host=obiwan.univ-brest.fr"
-								, "blanlear"
-								, "1mwwtaq5");
+			$pdo = new PDO(	'mysql:dbname='. $GLOBALS['DB_NAME'] .';'.
+							'host='. $GLOBALS['DB_HOST'] .'localhost',
+							$GLOBALS['DB_USER'],
+							$GLOBALS['DB_PASSWD']);
 		}
 
 		return $pdo;
