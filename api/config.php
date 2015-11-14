@@ -7,6 +7,6 @@
  */
 
 define('DB_NAME', 'LalFabet');
-define('DB_HOST', 'localhots');
+define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASSWD', '');
