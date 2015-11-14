@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Oct 21, 2015 at 06:48  
+-- Generation Time: Nov 14, 2015 at 02:00  
 -- Server version: 5.6.26
 -- PHP Version: 5.6.12
 
@@ -34,6 +34,13 @@ CREATE TABLE IF NOT EXISTS `t_abonnement_abo` (
   `grp_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+--
+-- Dumping data for table `t_abonnement_abo`
+--
+
+INSERT INTO `t_abonnement_abo` (`abo_id`, `abo_debut`, `abo_fin`, `cpt_pseudo`, `grp_id`) VALUES
+(0, '2000-01-01', '2000-12-31', 'loukiluk', 0);
+
 -- --------------------------------------------------------
 
 --
@@ -53,7 +60,7 @@ CREATE TABLE IF NOT EXISTS `t_actualite_act` (
 --
 
 INSERT INTO `t_actualite_act` (`act_id`, `cpt_pseudo`, `act_titre`, `act_contenu`, `act_date`) VALUES
-(1, 'loukiluk', 'Le site est en construction !', 'Bienvenue sur le site de LalFabet qui est actuellement en développement !', '2015-10-21');
+(1, 'loukiluk', 'Le site est en construction !', 'Bienvenue sur le site de LalFabet qui est actuellement en développement !', '2015-10-27');
 
 -- --------------------------------------------------------
 
@@ -81,7 +88,8 @@ CREATE TABLE IF NOT EXISTS `t_adherent_adh` (
 --
 
 INSERT INTO `t_adherent_adh` (`cpt_pseudo`, `adh_nom`, `adh_prenom`, `adh_date_naissance`, `adh_rue`, `adh_num_rue`, `adh_code_postal`, `adh_ville`, `adh_telephone1`, `adh_telephone2`, `adh_telephone3`, `adh_mail`) VALUES
-('loukiluk', 'Louka', 'Fraboulet', '1995-02-11', 'Edouard Corps-à-bière', 42, '29200', 'Brest', '0296159501', NULL, NULL, 'hihi@rofl.ninja'),
+('inconnu', 'inconnu', 'inconnu', '2015-10-27', 'sdfg', 2, '21321', 'sdgf', '1111111111', '1111111111', '1111111111', 'a@b.cd'),
+('loukiluk', 'Louka', 'Fraboulet', '1995-02-11', 'Edouard Corbière', 42, '29200', 'Brest', '0296159501', NULL, NULL, 'hihi@rofl.ninja'),
 ('Shumush', 'Arthur', 'Blanleuil', '1995-01-02', 'harteloire', 12, '29200', 'Brest', '0296159506', NULL, NULL, 'hehe@rofl.ninja');
 
 -- --------------------------------------------------------
@@ -125,6 +133,7 @@ CREATE TABLE IF NOT EXISTS `t_compte_cpt` (
 --
 
 INSERT INTO `t_compte_cpt` (`cpt_pseudo`, `cpt_password`) VALUES
+('inconnu', 'inconnu'),
 ('loukiluk', 'abs(-sqrt(-52))'),
 ('Shumush', 'l33tsp!k');
 
@@ -228,6 +237,13 @@ CREATE TABLE IF NOT EXISTS `t_reservation_equipement_req` (
   `cpt_pseudo` varchar(128) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+--
+-- Dumping data for table `t_reservation_equipement_req`
+--
+
+INSERT INTO `t_reservation_equipement_req` (`eqp_id`, `req_jour`, `req_horaire`, `cpt_pseudo`) VALUES
+(1, '2015-10-27', 22, 'loukiluk');
+
 -- --------------------------------------------------------
 
 --
@@ -274,8 +290,8 @@ INSERT INTO `t_salle_sal` (`sal_nom`, `sal_description`) VALUES
 --
 ALTER TABLE `t_abonnement_abo`
   ADD PRIMARY KEY (`abo_id`),
-  ADD KEY `abo_adh_FK` (`cpt_pseudo`),
-  ADD KEY `abo_grp_FK` (`grp_id`);
+  ADD KEY `abo_grp_FK` (`grp_id`),
+  ADD KEY `abo_adh_FK` (`cpt_pseudo`);
 
 --
 -- Indexes for table `t_actualite_act`
@@ -288,7 +304,8 @@ ALTER TABLE `t_actualite_act`
 -- Indexes for table `t_adherent_adh`
 --
 ALTER TABLE `t_adherent_adh`
-  ADD PRIMARY KEY (`cpt_pseudo`);
+  ADD PRIMARY KEY (`cpt_pseudo`),
+  ADD KEY `adh_cpt_FK` (`cpt_pseudo`);
 
 --
 -- Indexes for table `t_commande_cmd`
@@ -301,9 +318,9 @@ ALTER TABLE `t_commande_cmd`
 --
 ALTER TABLE `t_commande_item_cit`
   ADD PRIMARY KEY (`cit_id`),
+  ADD KEY `cit_ite_FK` (`ite_id`),
   ADD KEY `cit_adh_FK` (`cpt_pseudo`),
-  ADD KEY `cit_cmd_FK` (`cmd_debut`),
-  ADD KEY `cit_ite_FK` (`ite_id`);
+  ADD KEY `cit_cmd_FK` (`cmd_debut`);
 
 --
 -- Indexes for table `t_compte_cpt`
@@ -335,16 +352,16 @@ ALTER TABLE `t_item_ite`
 --
 ALTER TABLE `t_reservation_equipement_req`
   ADD PRIMARY KEY (`eqp_id`,`req_jour`,`req_horaire`),
-  ADD KEY `req_adh_FK` (`cpt_pseudo`),
-  ADD KEY `req_eqp_FK` (`eqp_id`);
+  ADD KEY `req_eqp_FK` (`eqp_id`),
+  ADD KEY `req_adh_FK` (`cpt_pseudo`);
 
 --
 -- Indexes for table `t_reservation_salle_rsa`
 --
 ALTER TABLE `t_reservation_salle_rsa`
   ADD PRIMARY KEY (`rsa_jour`,`rsa_horaire`,`sal_nom`),
-  ADD KEY `rsa_adh_FK` (`cpt_pseudo`),
-  ADD KEY `rsa_sal_FK` (`sal_nom`);
+  ADD KEY `rsa_sal_FK` (`sal_nom`),
+  ADD KEY `rsa_adh_FK` (`cpt_pseudo`);
 
 --
 -- Indexes for table `t_salle_sal`
@@ -376,6 +393,12 @@ ALTER TABLE `t_equipement_eqp`
 ALTER TABLE `t_abonnement_abo`
   ADD CONSTRAINT `abo_adh_FK` FOREIGN KEY (`cpt_pseudo`) REFERENCES `t_adherent_adh` (`cpt_pseudo`) ON DELETE CASCADE,
   ADD CONSTRAINT `abo_grp_FK` FOREIGN KEY (`grp_id`) REFERENCES `t_groupe_grp` (`grp_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `t_actualite_act`
+--
+ALTER TABLE `t_actualite_act`
+  ADD CONSTRAINT `act_adh_FK` FOREIGN KEY (`cpt_pseudo`) REFERENCES `t_adherent_adh` (`cpt_pseudo`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `t_adherent_adh`
