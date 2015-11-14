@@ -1,4 +1,4 @@
-				<article id="<?php echo $article["act_id"]; ?>">
-					<h1> <?php echo $article["act_titre"]; ?> </h1>
-					<p> <?php echo $article["act_contenu"]; ?> </p>
+				<article id="<?php echo $this->model->act_id; ?>">
+					<h1> <?php echo $this->model->act_titre; ?> </h1>
+					<p> <?php echo $this->model->act_contenu; ?> </p>
 				</article>

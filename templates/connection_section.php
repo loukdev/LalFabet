@@ -1,7 +1,7 @@
 <section>
 <?php 
 
-if (is_array($this->get("errors")) and count($this->get("errors")) > 0)
+if ($this->model->hasErrors())
 { 
   ?>
  

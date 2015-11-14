@@ -1,2 +1,7 @@
 # nb project files
 nbproject/
+
+# doxygen
+/doxygen
+/Doxyfile
+docs/

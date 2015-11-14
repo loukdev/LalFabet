@@ -5,19 +5,24 @@ require_once('api/Obiwan.class.php');
 require_once('api/utility.php');
 
 /*
- * Ce modèle représente les données relatives aux tables t_adherent_adh
- * et t_compte_cpt
+ * \class ModelUser
+ * \brief Modèle représentant les tables t_adherent_adh et t_compte_cpt.
  * 
- * Il faut utiliser ce modèle pour avoir accès aux données venant
- * de ces tables ou pour inscrire une personne
+ * Ce modèle représente les données relatives aux tables t_adherent_adh
+ * et t_compte_cpt.
+ * 
+ * Il permet :
+ *  - la récupération d'un utilisateur et de ses données adhérents ;
+ *  - l'inscription d'une personne en fonction des données envoyées
+ * (via un formulaire, par exemple).
  * 
  */
 
 class ModelUser implements IModel
 {  
-	private $post_infos = array();
-	private $errors = array();
-	private $query_results = array();
+	private $post_infos = array();	//!< Contient les données d'un adhérent.
+	private $errors = array();		//!< Contient les erreurs éventuellement apparues lors de traitements.
+	private $query_results = array();	//!< Contient le résultat de la dernière requête SQL effectuée.
 
 	private $add_adh_query = "INSERT INTO `t_adherent_adh`
 				( `cpt_pseudo`
@@ -55,7 +60,11 @@ class ModelUser implements IModel
 				, :cpt_password
 				)";
 
-
+	/*!
+	 * \brief Constructeur.
+	 * 
+	 * Remplie les données du modèle avec $array.
+	 */
 	public function __construct($array)
 	{
 		$this->post_infos = array_merge(array(
@@ -75,9 +84,15 @@ class ModelUser implements IModel
 			, 'adh_mail' => ''), $array);
 	}
 
-	// Fonction à appeler pour ajouter un compte à la volée
-	// $array doit contenir tous les champs des tables
-	// indexés comme il le sont dans les tables
+	/*! \brief Ajoute un compte à la volée.
+	 * 
+	 * \param $array Liste des champs.
+	 * 
+	 * Ajoute un compte à la volée avec les données contenu dans $array,
+	 * qui doit être indexé de la même manière que dans les tables.
+	 * Après exécution, vérifier qu'une erreur n'a pas été détectée avec
+	 * 
+	 */
 
 	public function tryAddAccount($array)
 	{
@@ -235,6 +250,11 @@ class ModelUser implements IModel
 
 	public function __get($var)
 	{
+		if(!array_key_exists($var, $this->post_infos)) {
+			return '';
+		}
+
+		return $this->post_infos[$var];
 	}
 
 	public static function getAll()
@@ -244,6 +264,16 @@ class ModelUser implements IModel
 	public function getInfos()
 	{
 		return $this->post_infos;
+	}
+
+	public function getErrors()
+	{
+		return $this->errors;
+	}
+
+	public function hasErrors()
+	{
+		return !empty($this->errors);
 	}
 
 	public function getRows()
@@ -273,8 +303,7 @@ class ModelUser implements IModel
 			if (!isset($_SESSION['cpt_pseudo']))
 			{
 				array_push($ret->errors, "Vous n'êtes pas connecté.");
-		$ret->post_infos = array_merge($ret->post_infos, array('errors' => $ret->errors));
-		return $ret;
+				return $ret;
 			}
 			
 			if ($_SESSION['cpt_pseudo'] != $username)
@@ -292,8 +321,7 @@ class ModelUser implements IModel
 				if (!is_null($q))
 				{
 					array_push($ret->errors, "Votre abonnement n'est pas à jour.");
-		$ret->post_infos = array_merge($ret->post_infos, array('errors' => $ret->errors));
-		return $ret;
+					return $ret;
 				}
 			
 				$res = $q->fetchAll();
@@ -301,7 +329,9 @@ class ModelUser implements IModel
 				{
 					// pas de droit pour les petits/grands debrouillards
 					case Obiwan::GROUP_SMALL:
-					case Obiwan::GROUP_BIG: array_push($this->errors, "Vous n'avez pas les droits pour faire cela."); return;
+					case Obiwan::GROUP_BIG:
+						array_push($this->errors, "Vous n'avez pas les droits pour accéder à ces informations.");
+						return;
 
 					// un animateur ne peut que accéder aux petits/grands debrouillards
 					case Obiwan::GROUP_ANIMATOR:
@@ -322,11 +352,10 @@ class ModelUser implements IModel
 						if ($res2['grp_id'] != Obiwan::GROUP_SMALL && $res2['grp_id'] != Obiwan::GROUP_BIG)
 						{
 							array_push($ret->errors, "Vous n'avez pas les droits pour faire cela.");
-		$ret->post_infos = array_merge($ret->post_infos, array('errors' => $ret->errors));
-		return $ret;
+							return $ret;
 						}
 					}
-					
+
 					// accès à tout pour le reste
 					case Obiwan::GROUP_MANAGER:
 					case Obiwan::GROUP_ADMIN:
@@ -364,8 +393,7 @@ class ModelUser implements IModel
 			$arr = $ret->query_results->fetchAll();
 			$ret->post_infos = $arr[0];
 		}
-		
-		$ret->post_infos = array_merge($ret->post_infos, array('errors' => $ret->errors));
+
 		return $ret;
 	}
 
@@ -377,12 +405,9 @@ class ModelUser implements IModel
 			if ($array['cpt_password'] != $ret->post_infos['cpt_password'])
 			{
 				array_push($ret->errors, 'Mauvais mot de passe.');
-				$ret->post_infos = array_merge($ret->post_infos, array('errors' => $ret->errors));
 			}
 		}
 
 		return $ret;
 	}
 }
-
-?>

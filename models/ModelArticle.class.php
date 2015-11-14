@@ -2,6 +2,10 @@
 include_once('api/bdd.php');
 include_once('api/IModel.class.php');
 
+/*!
+ * \class ModelArticle
+ * \brief 
+ */
 class ModelArticle implements IModel
 {
 	protected $data;
@@ -33,7 +37,7 @@ class ModelArticle implements IModel
 	public function __get($var)
 	{
 		if(!array_key_exists($var, $this->data)) {
-			throw new Exception(__CLASS__ .'::__get : '. $var .' is not a row.');
+			return '';
 		}
 		return $this->data[$var];
 	}

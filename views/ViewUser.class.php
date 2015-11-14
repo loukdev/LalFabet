@@ -19,9 +19,9 @@ class ViewUser implements IView
 
 		echo '<section>';
 
-		if (count($this->get('errors')))
+		if ($this->model->hasErrors())
 		{
-			foreach ($this->get('errors') as $err)
+			foreach ($this->model->getErrors() as $err)
 			{
 				echo '<p style="color: red;">' . $err . '</p>';
 			}
@@ -38,14 +38,4 @@ class ViewUser implements IView
 
 		ob_end_flush();
 	}
-
-	private function get($key)
-	{
-		$tab = $this->model->getInfos();
-		if (isset($tab[$key])) 
-			return $tab[$key];
-		else
-			return '';
-	}
-	
 }
