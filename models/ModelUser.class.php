@@ -4,27 +4,28 @@ require_once('api/IModel.class.php');
 require_once('api/Obiwan.class.php');
 require_once('api/utility.php');
 
+define('TABLE_NAME_ADH', '`t_adherent_adh`');
+define('TABLE_NAME_CPT', '`t_compte_cpt`');
+
 /*
  * \class ModelUser
  * \brief Modèle représentant les tables t_adherent_adh et t_compte_cpt.
  * 
- * Ce modèle représente les données relatives aux tables t_adherent_adh
+ *  Ce modèle représente les données relatives aux tables t_adherent_adh
  * et t_compte_cpt.
  * 
- * Il permet :
- *  - la récupération d'un utilisateur et de ses données adhérents ;
- *  - l'inscription d'une personne en fonction des données envoyées
- * (via un formulaire, par exemple).
- * 
+ *  Il permet :
+ *   - la création d'un adhérent et de son compte utilisateur.
+ *   - la récupération d'un adhérent et de son compte utilisateur ;
+ *  \todo Suppression d'un utilisateur dans la base de données.
  */
-
 class ModelUser implements IModel
 {  
 	private $post_infos = array();	//!< Contient les données d'un adhérent.
 	private $errors = array();		//!< Contient les erreurs éventuellement apparues lors de traitements.
 	private $query_results = array();	//!< Contient le résultat de la dernière requête SQL effectuée.
 
-	private $add_adh_query = "INSERT INTO `t_adherent_adh`
+	private static $add_adh_query = 'INSERT INTO'. TABLE_NAME_ADH .'
 				( `cpt_pseudo`
 				, `adh_nom`
 				, `adh_prenom`
@@ -50,25 +51,29 @@ class ModelUser implements IModel
 				, :adh_telephone3
 				, :adh_mail
 				, :adh_num_rue
-				)";
+				)';
 
-	private $add_cpt_query = "INSERT INTO `t_compte_cpt`
+	private static $add_cpt_query = 'INSERT INTO'. TABLE_NAME_CPT .'
 				( `cpt_pseudo`
 				, `cpt_password`
 				) VALUES
 				( :cpt_pseudo
 				, :cpt_password
-				)";
+				)';
+	private static $del_adh_query = 'DELETE FROM '. TABLE_NAME_ADH .' WHERE adh_id=';
+	private static $del_cpt_query = 'DELETE FROM '. TABLE_NAME_CPT .' WHERE adh_id=';
+	private static $get_usr_query = 'SELECT * FROM '. TABLE_NAME_ADH .' NATURAL JOIN '.
+											   TABLE_NAME_CPT .' WHERE cpt_pseudo=';
 
 	/*!
 	 * \brief Constructeur.
 	 * 
-	 * Remplie les données du modèle avec $array.
+	 *  Remplie les données du modèle avec $array.
 	 */
 	public function __construct($array)
 	{
 		$this->post_infos = array_merge(array(
-				'cpt_pseudo' => ''
+			  'cpt_pseudo' => ''
 			, 'cpt_password' => ''
 			, 'cpt_password_verif' => ''
 			, 'adh_prenom' => ''
@@ -84,23 +89,22 @@ class ModelUser implements IModel
 			, 'adh_mail' => ''), $array);
 	}
 
-	/*! \brief Ajoute un compte à la volée.
-	 * 
+	/*!
+	 * \brief Enregistre un adhérent et son compte utilisateur.
 	 * \param $array Liste des champs.
 	 * 
-	 * Ajoute un compte à la volée avec les données contenu dans $array,
-	 * qui doit être indexé de la même manière que dans les tables.
-	 * Après exécution, vérifier qu'une erreur n'a pas été détectée avec
-	 * 
+	 *  Enregistre un adhérent et son compte utilisateur avec les données contenu
+	 * dans $array, qui doit être indexé de la même manière que dans les tables.
+	 *  Après exécution, vérifier qu'une erreur n'a pas été détectée avec
+	 * ModelUser::hasErrors().
 	 */
-
 	public function tryAddAccount($array)
 	{
 		$this->post_infos = $array;
 
 		// Verification de la présence des informations reçues
 		if (are_all_set($this->post_infos, array(
-				'cpt_pseudo'
+			  'cpt_pseudo'
 			, 'cpt_password'
 			, 'cpt_password_verif'
 			, 'adh_prenom'
@@ -126,7 +130,12 @@ class ModelUser implements IModel
 		$this->post_infos = array_merge($this->post_infos, array('errors' => $this->errors));
 	}
 
-	// Se charge d'ajouter un compte
+	/*!
+	 * \brief Enregistre les un compte.
+	 * 
+	 *  Exécute "le sale boulot" pour ajouter un compte : vérification de la
+	 * validité de toutes les données
+	 */
 	private function tryAddAccountPrivate()
 	{
 		if (strlen($this->post_infos['cpt_pseudo']) < 1
@@ -149,48 +158,45 @@ class ModelUser implements IModel
 		{
 			array_push($this->errors, 'Les deux mots de passe ne correspondent pas.');
 		}
-		
+
 		// verification numéros de téléphone
-    $nombre_num_valides = 0;
+		$nombre_num_valides = 0;
 		if (strlen($this->post_infos['adh_telephone1']) > 0)
 		{
-      if (strlen($this->post_infos['adh_telephone1']) != 10)
-        array_push($this->errors, 'Téléphone 1 invalide.');
-      else
-        $nombre_num_valides++;
+			if (strlen($this->post_infos['adh_telephone1']) != 10) {
+				array_push($this->errors, 'Téléphone 1 invalide.');
+			} else {
+				$nombre_num_valides++; }
 		}
 		if (strlen($this->post_infos['adh_telephone2']) > 0)
 		{
-      if (strlen($this->post_infos['adh_telephone2']) != 10)
-        array_push($this->errors, 'Téléphone 2 invalide.');
-      else
-        $nombre_num_valides++;
+			if (strlen($this->post_infos['adh_telephone2']) != 10) {
+				array_push($this->errors, 'Téléphone 2 invalide.');
+			} else {
+				$nombre_num_valides++; }
 		}
 		if (strlen($this->post_infos['adh_telephone3']) > 0)
 		{
-      if (strlen($this->post_infos['adh_telephone3']) != 10)
-        array_push($this->errors, 'Téléphone 3 invalide.');
-      else
-        $nombre_num_valides++;
+			if (strlen($this->post_infos['adh_telephone3']) != 10) {
+				array_push($this->errors, 'Téléphone 3 invalide.');
+			} else {
+				$nombre_num_valides++; }
 		}
 
 		// verification date de naissance
 		$time = strtotime($this->post_infos['adh_date_naissance']);
-    $diff_time = 0;
+		$diff_time = 0;
 		if ($time != false and ($diff_time = time() - $time) > 0)
 		{
-      if ($diff_time < 18 * 356 * 24 * 3600 && $nombre_num_valides < 2)
-      {
-        array_push($this->errors, 'Si vous avez moins de 18 ans, vous avez besoin de deux numéros de téléphone.');
-      }
-      else      
-        $this->post_infos['adh_date_naissance'] = date('Y-m-d', $time);
+			if ($diff_time < 18 * 356 * 24 * 3600 && $nombre_num_valides < 2) {
+				array_push($this->errors, 'Si vous avez moins de 18 ans, vous avez besoin de deux numéros de téléphone.');
+			} else {
+				$this->post_infos['adh_date_naissance'] = date('Y-m-d', $time); }
 		}
 		else
 		{
 			array_push($this->errors, 'Date invalide.');
 		}
-
     
 		// vérification adresse mail
 		if (!preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $this->post_infos['adh_mail']))
@@ -205,7 +211,9 @@ class ModelUser implements IModel
 		}
 
 		if (count($this->errors) > 0)
+		{
 			return;
+		}
 
 		$db = NULL;
 		try
@@ -215,20 +223,22 @@ class ModelUser implements IModel
 			$db->beginTransaction();
 
 			// ajout d'une entrée à t_compte_cpt
-			$cpt = $db->prepare($this->add_cpt_query);
+			$cpt = $db->prepare(self::$add_cpt_query);
 			if (!$cpt->execute(array( 'cpt_pseudo' => $this->post_infos['cpt_pseudo']
-														  , 'cpt_password' =>  $this->post_infos['cpt_password'])))
+									, 'cpt_password' =>  $this->post_infos['cpt_password'])))
 			{
 				$err = $cpt->errorInfo();
-				throw new Exception ("Une erreur serveur est survenue. " . $err[2]);
+				throw new Exception("Une erreur serveur est survenue. " . $err[2]);
 			}				
 			// ajout à t_adherent_adh
-			$adh = $db->prepare($this->add_adh_query);
+			$adh = $db->prepare(self::$add_adh_query);
 			if (!$adh->execute(
-					poor_array_diff_key($this->post_infos, array('cpt_password' => '', 'cpt_password_verif' => ''))))
+				poor_array_diff_key($this->post_infos, array('cpt_password' => ''
+														   , 'cpt_password_verif' => ''))
+				))
 			{
 				$err = $adh->errorInfo();
-				throw new Exception ("Une erreur serveur est survenue. " . $err[2]);
+				throw new Exception('Une erreur serveur est survenue. ' . $err[2]);
 			}
 
 			// transaction terminée sans erreurs
@@ -238,15 +248,50 @@ class ModelUser implements IModel
 		{
 			// si jamais le problème provient d'une requête, on rollback
 			if (!is_null($db))
+			{
 				$db->rollBack();
+			}
 
 			array_push($this->errors, $e->getMessage());
 		}
-
 	}
 
-	public function save() {}
-	public function delete() {}
+	public function save()
+	{
+		$this->tryAddAccountPrivate();
+	}
+
+	public function delete()
+	{
+		$db = null;
+		try {
+			$db = Obiwan::PDO();
+			$db->beginTransaction();
+
+			$adh = $db->query(self::$del_adh_query);
+			if(!$adh)
+			{
+				$err = $db->errorInfo();
+				throw new Exception('Une erreur serveur est survenue. '. $err[2]);
+			}
+
+			$cpt = $db->query(self::$del_cpt_query);
+			if(!$cpt)
+			{
+				$err = $db->errorInfo();
+				throw new Exception('Une erreur serveur est survenue. '. $err[2]);
+			}
+
+			$db->commit();
+		} catch (Exception $e) {
+			if(!is_null($db))
+			{
+				$db->rollBack();
+			}
+
+			array_push($this->errors, $e->getMessage());
+		}
+	}
 
 	public function __get($var)
 	{
@@ -293,7 +338,7 @@ class ModelUser implements IModel
 	{
 		return ModelUser::getUserPrivate($username, true);
 	}
-	
+
 	private static function getUserPrivate($username, $verif)
 	{
 		$ret = new ModelUser(array());
@@ -363,12 +408,12 @@ class ModelUser implements IModel
 				}
 			}
 		}
-		
+
 		try
 		{
 			$db = Obiwan::PDO();
-			
-			$q = $db->query("SELECT * FROM `t_adherent_adh` NATURAL JOIN `t_compte_cpt` WHERE cpt_pseudo='$username'");
+
+			$q = $db->query(self::$get_usr_query . $username);
 
 			if ($q->rowCount() > 0)
 			{
@@ -381,7 +426,7 @@ class ModelUser implements IModel
 		}
 		catch (Exception $e)
 		{
-			array_push($ret->errors, "Une erreur serveur est survenue.");
+			array_push($ret->errors, 'Une erreur serveur est survenue.');
 		}
 
 		if (!$ret->query_results)
