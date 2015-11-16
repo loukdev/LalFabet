@@ -1,6 +1,7 @@
 ﻿<?php
 
 require_once('api/IModel.class.php');
+include_once('api/Model.class.php');
 require_once('api/Obiwan.class.php');
 require_once('api/utility.php');
 
@@ -19,10 +20,8 @@ define('TABLE_NAME_CPT', '`t_compte_cpt`');
  *   - la récupération d'un adhérent et de son compte utilisateur ;
  *  \todo Suppression d'un utilisateur dans la base de données.
  */
-class ModelUser implements IModel
-{  
-	private $post_infos = array();	//!< Contient les données d'un adhérent.
-	private $errors = array();		//!< Contient les erreurs éventuellement apparues lors de traitements.
+class ModelUser extends Model implements IModel
+{
 	private $query_results = array();	//!< Contient le résultat de la dernière requête SQL effectuée.
 
 	private static $add_adh_query = 'INSERT INTO'. TABLE_NAME_ADH .'
@@ -72,7 +71,7 @@ class ModelUser implements IModel
 	 */
 	public function __construct($array)
 	{
-		$this->post_infos = array_merge(array(
+		$this->data = array_merge(array(
 			  'cpt_pseudo' => ''
 			, 'cpt_password' => ''
 			, 'cpt_password_verif' => ''
@@ -100,10 +99,10 @@ class ModelUser implements IModel
 	 */
 	public function tryAddAccount($array)
 	{
-		$this->post_infos = $array;
+		$this->data = $array;
 
 		// Verification de la présence des informations reçues
-		if (are_all_set($this->post_infos, array(
+		if (are_all_set($this->data, array(
 			  'cpt_pseudo'
 			, 'cpt_password'
 			, 'cpt_password_verif'
@@ -124,10 +123,10 @@ class ModelUser implements IModel
 		}
 		else
 		{
-			array_push($this->errors, '');
+			parent::addError('');
 		}
 
-		$this->post_infos = array_merge($this->post_infos, array('errors' => $this->errors));
+		$this->data = array_merge($this->data, array('errors' => $this->errors));
 	}
 
 	/*!
@@ -138,76 +137,76 @@ class ModelUser implements IModel
 	 */
 	private function tryAddAccountPrivate()
 	{
-		if (strlen($this->post_infos['cpt_pseudo']) < 1
-			or strlen($this->post_infos['cpt_password']) < 1
-			or strlen($this->post_infos['cpt_password_verif']) < 1
-			or strlen($this->post_infos['adh_prenom']) < 1
-			or strlen($this->post_infos['adh_nom']) < 1
-			or strlen($this->post_infos['adh_date_naissance']) < 1
-			or strlen($this->post_infos['adh_rue']) < 1
-			or strlen($this->post_infos['adh_code_postal']) < 1
-			or strlen($this->post_infos['adh_ville']) < 1
-			or strlen($this->post_infos['adh_telephone1']) < 1
-			or strlen($this->post_infos['adh_mail']) < 1)
+		if (strlen($this->data['cpt_pseudo']) < 1
+			or strlen($this->data['cpt_password']) < 1
+			or strlen($this->data['cpt_password_verif']) < 1
+			or strlen($this->data['adh_prenom']) < 1
+			or strlen($this->data['adh_nom']) < 1
+			or strlen($this->data['adh_date_naissance']) < 1
+			or strlen($this->data['adh_rue']) < 1
+			or strlen($this->data['adh_code_postal']) < 1
+			or strlen($this->data['adh_ville']) < 1
+			or strlen($this->data['adh_telephone1']) < 1
+			or strlen($this->data['adh_mail']) < 1)
 		{
-			array_push($this->errors, 'Tous les champs avec une étoile sont à renseigner.');
+			parent::addError('Tous les champs avec une étoile sont à renseigner.');
 		}
 
 		// verification mot de passe
-		if ($this->post_infos['cpt_password'] != $this->post_infos['cpt_password_verif'])
+		if ($this->data['cpt_password'] != $this->data['cpt_password_verif'])
 		{
-			array_push($this->errors, 'Les deux mots de passe ne correspondent pas.');
+			parent::addError('Les deux mots de passe ne correspondent pas.');
 		}
 
 		// verification numéros de téléphone
 		$nombre_num_valides = 0;
-		if (strlen($this->post_infos['adh_telephone1']) > 0)
+		if (strlen($this->data['adh_telephone1']) > 0)
 		{
-			if (strlen($this->post_infos['adh_telephone1']) != 10) {
-				array_push($this->errors, 'Téléphone 1 invalide.');
+			if (strlen($this->data['adh_telephone1']) != 10) {
+				parent::addError('Téléphone 1 invalide.');
 			} else {
 				$nombre_num_valides++; }
 		}
-		if (strlen($this->post_infos['adh_telephone2']) > 0)
+		if (strlen($this->data['adh_telephone2']) > 0)
 		{
-			if (strlen($this->post_infos['adh_telephone2']) != 10) {
-				array_push($this->errors, 'Téléphone 2 invalide.');
+			if (strlen($this->data['adh_telephone2']) != 10) {
+				parent::addError('Téléphone 2 invalide.');
 			} else {
 				$nombre_num_valides++; }
 		}
-		if (strlen($this->post_infos['adh_telephone3']) > 0)
+		if (strlen($this->data['adh_telephone3']) > 0)
 		{
-			if (strlen($this->post_infos['adh_telephone3']) != 10) {
-				array_push($this->errors, 'Téléphone 3 invalide.');
+			if (strlen($this->data['adh_telephone3']) != 10) {
+				parent::addError('Téléphone 3 invalide.');
 			} else {
 				$nombre_num_valides++; }
 		}
 
 		// verification date de naissance
-		$time = strtotime($this->post_infos['adh_date_naissance']);
+		$time = strtotime($this->data['adh_date_naissance']);
 		$diff_time = 0;
 		if ($time != false and ($diff_time = time() - $time) > 0)
 		{
 			if ($diff_time < 18 * 356 * 24 * 3600 && $nombre_num_valides < 2) {
-				array_push($this->errors, 'Si vous avez moins de 18 ans, vous avez besoin de deux numéros de téléphone.');
+				parent::addError('Si vous avez moins de 18 ans, vous avez besoin de deux numéros de téléphone.');
 			} else {
-				$this->post_infos['adh_date_naissance'] = date('Y-m-d', $time); }
+				$this->data['adh_date_naissance'] = date('Y-m-d', $time); }
 		}
 		else
 		{
-			array_push($this->errors, 'Date invalide.');
+			parent::addError('Date invalide.');
 		}
     
 		// vérification adresse mail
-		if (!preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $this->post_infos['adh_mail']))
+		if (!preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $this->data['adh_mail']))
 		{
-			array_push($this->errors, 'Adresse mail invalide.');
+			parent::addError('Adresse mail invalide.');
 		}
 
 		// code postal
-		if (strlen($this->post_infos['adh_code_postal']) != 5)
+		if (strlen($this->data['adh_code_postal']) != 5)
 		{
-			array_push($this->errors, "Code postal invalie");
+			parent::addError('Code postal invalie');
 		}
 
 		if (count($this->errors) > 0)
@@ -224,8 +223,8 @@ class ModelUser implements IModel
 
 			// ajout d'une entrée à t_compte_cpt
 			$cpt = $db->prepare(self::$add_cpt_query);
-			if (!$cpt->execute(array( 'cpt_pseudo' => $this->post_infos['cpt_pseudo']
-									, 'cpt_password' =>  $this->post_infos['cpt_password'])))
+			if (!$cpt->execute(array( 'cpt_pseudo' => $this->data['cpt_pseudo']
+									, 'cpt_password' =>  $this->data['cpt_password'])))
 			{
 				$err = $cpt->errorInfo();
 				throw new Exception("Une erreur serveur est survenue. " . $err[2]);
@@ -233,7 +232,7 @@ class ModelUser implements IModel
 			// ajout à t_adherent_adh
 			$adh = $db->prepare(self::$add_adh_query);
 			if (!$adh->execute(
-				poor_array_diff_key($this->post_infos, array('cpt_password' => ''
+				poor_array_diff_key($this->data, array('cpt_password' => ''
 														   , 'cpt_password_verif' => ''))
 				))
 			{
@@ -252,7 +251,7 @@ class ModelUser implements IModel
 				$db->rollBack();
 			}
 
-			array_push($this->errors, $e->getMessage());
+			parent::addError($e->getMessage());
 		}
 	}
 
@@ -289,17 +288,8 @@ class ModelUser implements IModel
 				$db->rollBack();
 			}
 
-			array_push($this->errors, $e->getMessage());
+			parent::addError($e->getMessage());
 		}
-	}
-
-	public function __get($var)
-	{
-		if(!array_key_exists($var, $this->post_infos)) {
-			return '';
-		}
-
-		return $this->post_infos[$var];
 	}
 
 	public static function getAll()
@@ -308,17 +298,7 @@ class ModelUser implements IModel
 
 	public function getInfos()
 	{
-		return $this->post_infos;
-	}
-
-	public function getErrors()
-	{
-		return $this->errors;
-	}
-
-	public function hasErrors()
-	{
-		return !empty($this->errors);
+		return $this->data;
 	}
 
 	public function getRows()
@@ -347,13 +327,13 @@ class ModelUser implements IModel
 		{
 			if (!isset($_SESSION['cpt_pseudo']))
 			{
-				array_push($ret->errors, "Vous n'êtes pas connecté.");
+				parent::addError("Vous n'êtes pas connecté.");
 				return $ret;
 			}
-			
+
 			if ($_SESSION['cpt_pseudo'] != $username)
 			{
-					
+
 				// récupération du groupe de l'utilisateur
 				$db = Obiwan::PDO();
 				$q = $db->query("SELECT `grp_id`
@@ -365,7 +345,7 @@ class ModelUser implements IModel
 				// pas d'abonnement, pas de droit
 				if (!is_null($q))
 				{
-					array_push($ret->errors, "Votre abonnement n'est pas à jour.");
+					parent::addError("Votre abonnement n'est pas à jour.");
 					return $ret;
 				}
 			
@@ -375,7 +355,7 @@ class ModelUser implements IModel
 					// pas de droit pour les petits/grands debrouillards
 					case Obiwan::GROUP_SMALL:
 					case Obiwan::GROUP_BIG:
-						array_push($this->errors, "Vous n'avez pas les droits pour accéder à ces informations.");
+						parent::addError("Vous n'avez pas les droits pour accéder à ces informations.");
 						return;
 
 					// un animateur ne peut que accéder aux petits/grands debrouillards
@@ -390,13 +370,13 @@ class ModelUser implements IModel
 						// pas d'abonnement, pas de droit
 						if (!is_null($q))
 						{
-							array_push($ret->errors, "Erreur.");
+							parent::addError("Erreur.");
 							return $ret;
 						}
 						$res2 = $q2->fetchAll();
 						if ($res2['grp_id'] != Obiwan::GROUP_SMALL && $res2['grp_id'] != Obiwan::GROUP_BIG)
 						{
-							array_push($ret->errors, "Vous n'avez pas les droits pour faire cela.");
+							parent::addError("Vous n'avez pas les droits pour faire cela.");
 							return $ret;
 						}
 					}
@@ -426,17 +406,17 @@ class ModelUser implements IModel
 		}
 		catch (Exception $e)
 		{
-			array_push($ret->errors, 'Une erreur serveur est survenue.');
+			parent::addError('Une erreur serveur est survenue.');
 		}
 
 		if (!$ret->query_results)
 		{
-			array_push($ret->errors, "Aucun utilisateur n'a pour nom $username.");
+			parent::addError("Aucun utilisateur n'a pour nom $username.");
 		}
 		else
 		{
 			$arr = $ret->query_results->fetchAll();
-			$ret->post_infos = $arr[0];
+			$ret->data = $arr[0];
 		}
 
 		return $ret;
@@ -445,11 +425,11 @@ class ModelUser implements IModel
 	public static function tryConnect($array)
 	{
 		$ret = ModelUser::getUserPrivate($array['cpt_pseudo'], false);
-		if (count($ret->errors) < 1)
+		if (!$ret->hasErrors())
 		{
-			if ($array['cpt_password'] != $ret->post_infos['cpt_password'])
+			if ($array['cpt_password'] != $ret->data['cpt_password'])
 			{
-				array_push($ret->errors, 'Mauvais mot de passe.');
+				parent::addError('Mauvais mot de passe.');
 			}
 		}
 

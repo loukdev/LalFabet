@@ -1,6 +1,7 @@
 <?php
 include_once('api/bdd.php');
 include_once('api/IModel.class.php');
+include_once('api/Model.class.php');
 
 /*!
  * \class ModelArticle
@@ -14,13 +15,11 @@ include_once('api/IModel.class.php');
  *   - la récupération d'un article avec son id ;
  */
 
-define('TABLE_NAME', 't_actualite_act');
-class ModelArticle implements IModel
+define('TABLE_NAME_ACT', '`t_actualite_act`');
+class ModelArticle extends Model implements IModel
 {
-	private $data;
-
-	private $add_act_query = 'INSERT INTO `.'. TABLE_NAME .'`
-		  (`act_id`, 
+	private $add_act_query = 'INSERT INTO `.'. TABLE_NAME_ACT .'`
+		 (`act_id`, 
 		  `cpt_pseudo`,
 		  `act_titre`,
 		  `act_contenu`,
@@ -30,22 +29,26 @@ class ModelArticle implements IModel
 		  , :act_titre
 		  , :act_contenu
 		  , :act_date)';
-	private $del_act_query = 'DELETE FROM '. TABLE_NAME .' WHERE act_id = ';
-	private $get_act_query = 'SELECT * FROM '. TABLE_NAME . 'WHERE act_id = ';
+	private $del_act_query = 'DELETE FROM '. TABLE_NAME_ACT .' WHERE act_id = ';
+	private $get_act_query = 'SELECT * FROM '. TABLE_NAME_ACT . 'WHERE ';
 
 	public function __construct($array)
 	{
-		$this->data = array_merge($array, array(
+		$this->data = array_merge(array(
 			'act_id' => ''
 		  , 'cpt_pseudo' => ''
 		  , 'act_titre' => ''
 		  , 'act_contenu' => ''
-		  , 'act_date' => ''));
+		  , 'act_date' => ''), $array);
 	}
 
-	public static function get($id)
+	public static function get($id_or_title)
 	{
-		$result = Obiwan::PDO()->query($this->get_act_query . $this->data['act_id']);
+		$str_id = 'act_titre = ';
+		if(is_int($id_or_title))
+			$str_id = 'act_id = ';
+
+		$result = Obiwan::PDO()->query($this->get_act_query . $str_id . $id_or_title);
 		if(!$result) {
 			throw new Exception(__CLASS__ . '::get : select query failed.');
 		} else {
@@ -58,9 +61,9 @@ class ModelArticle implements IModel
 		{
 			$db = Obiwan::PDO();
 			$db->query("SET NAMES 'utf8'");
-			$q  = $db->query("SELECT * FROM t_actualite_act");
+			$q  = $db->query('SELECT * FROM '. TABLE_NAME_ACT);
 			if (!$q) {
-				throw new Exception("Nope");
+				throw new Exception(__CLASS__ . '::getAll : select query failed.');
 			} else {
 				return $q->fetchAll(); }
 		}
@@ -68,14 +71,6 @@ class ModelArticle implements IModel
 		{
 			return array();
 		}
-	}
-
-	public function __get($var)
-	{
-		if(!array_key_exists($var, $this->data)) {
-			return '';
-		}
-		return $this->data[$var];
 	}
 
 	public function save()
