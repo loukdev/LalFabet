@@ -123,7 +123,7 @@ class ModelUser extends Model implements IModel
 		}
 		else
 		{
-			parent::addError('');
+			$this->addError('');
 		}
 
 		$this->data = array_merge($this->data, array('errors' => $this->errors));
@@ -149,13 +149,13 @@ class ModelUser extends Model implements IModel
 			or strlen($this->data['adh_telephone1']) < 1
 			or strlen($this->data['adh_mail']) < 1)
 		{
-			parent::addError('Tous les champs avec une étoile sont à renseigner.');
+			$this->addError('Tous les champs avec une étoile sont à renseigner.');
 		}
 
 		// verification mot de passe
 		if ($this->data['cpt_password'] != $this->data['cpt_password_verif'])
 		{
-			parent::addError('Les deux mots de passe ne correspondent pas.');
+			$this->addError('Les deux mots de passe ne correspondent pas.');
 		}
 
 		// verification numéros de téléphone
@@ -163,21 +163,21 @@ class ModelUser extends Model implements IModel
 		if (strlen($this->data['adh_telephone1']) > 0)
 		{
 			if (strlen($this->data['adh_telephone1']) != 10) {
-				parent::addError('Téléphone 1 invalide.');
+				$this->addError('Téléphone 1 invalide.');
 			} else {
 				$nombre_num_valides++; }
 		}
 		if (strlen($this->data['adh_telephone2']) > 0)
 		{
 			if (strlen($this->data['adh_telephone2']) != 10) {
-				parent::addError('Téléphone 2 invalide.');
+				$this->addError('Téléphone 2 invalide.');
 			} else {
 				$nombre_num_valides++; }
 		}
 		if (strlen($this->data['adh_telephone3']) > 0)
 		{
 			if (strlen($this->data['adh_telephone3']) != 10) {
-				parent::addError('Téléphone 3 invalide.');
+				$this->addError('Téléphone 3 invalide.');
 			} else {
 				$nombre_num_valides++; }
 		}
@@ -188,25 +188,25 @@ class ModelUser extends Model implements IModel
 		if ($time != false and ($diff_time = time() - $time) > 0)
 		{
 			if ($diff_time < 18 * 356 * 24 * 3600 && $nombre_num_valides < 2) {
-				parent::addError('Si vous avez moins de 18 ans, vous avez besoin de deux numéros de téléphone.');
+				$this->addError('Si vous avez moins de 18 ans, vous avez besoin de deux numéros de téléphone.');
 			} else {
 				$this->data['adh_date_naissance'] = date('Y-m-d', $time); }
 		}
 		else
 		{
-			parent::addError('Date invalide.');
+			$this->addError('Date invalide.');
 		}
     
 		// vérification adresse mail
 		if (!preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $this->data['adh_mail']))
 		{
-			parent::addError('Adresse mail invalide.');
+			$this->addError('Adresse mail invalide.');
 		}
 
 		// code postal
 		if (strlen($this->data['adh_code_postal']) != 5)
 		{
-			parent::addError('Code postal invalie');
+			$this->addError('Code postal invalie');
 		}
 
 		if (count($this->errors) > 0)
@@ -227,8 +227,8 @@ class ModelUser extends Model implements IModel
 									, 'cpt_password' =>  $this->data['cpt_password'])))
 			{
 				$err = $cpt->errorInfo();
-				throw new Exception("Une erreur serveur est survenue. " . $err[2]);
-			}				
+				throw new Exception("Une erreur serveur est survenue. Le nom d'utilisateur existe peut-être déjà.");
+			}
 			// ajout à t_adherent_adh
 			$adh = $db->prepare(self::$add_adh_query);
 			if (!$adh->execute(
@@ -251,7 +251,7 @@ class ModelUser extends Model implements IModel
 				$db->rollBack();
 			}
 
-			parent::addError($e->getMessage());
+			$this->addError($e->getMessage());
 		}
 	}
 
@@ -288,7 +288,7 @@ class ModelUser extends Model implements IModel
 				$db->rollBack();
 			}
 
-			parent::addError($e->getMessage());
+			$this->addError($e->getMessage());
 		}
 	}
 
@@ -327,7 +327,7 @@ class ModelUser extends Model implements IModel
 		{
 			if (!isset($_SESSION['cpt_pseudo']))
 			{
-				parent::addError("Vous n'êtes pas connecté.");
+				$ret->addError("Vous n'êtes pas connecté.");
 				return $ret;
 			}
 
@@ -345,7 +345,7 @@ class ModelUser extends Model implements IModel
 				// pas d'abonnement, pas de droit
 				if (!is_null($q))
 				{
-					parent::addError("Votre abonnement n'est pas à jour.");
+					$this->addError("Votre abonnement n'est pas à jour.");
 					return $ret;
 				}
 			
@@ -355,7 +355,7 @@ class ModelUser extends Model implements IModel
 					// pas de droit pour les petits/grands debrouillards
 					case Obiwan::GROUP_SMALL:
 					case Obiwan::GROUP_BIG:
-						parent::addError("Vous n'avez pas les droits pour accéder à ces informations.");
+						$this->addError("Vous n'avez pas les droits pour accéder à ces informations.");
 						return;
 
 					// un animateur ne peut que accéder aux petits/grands debrouillards
@@ -370,13 +370,13 @@ class ModelUser extends Model implements IModel
 						// pas d'abonnement, pas de droit
 						if (!is_null($q))
 						{
-							parent::addError("Erreur.");
+							$this->addError("Erreur.");
 							return $ret;
 						}
 						$res2 = $q2->fetchAll();
 						if ($res2['grp_id'] != Obiwan::GROUP_SMALL && $res2['grp_id'] != Obiwan::GROUP_BIG)
 						{
-							parent::addError("Vous n'avez pas les droits pour faire cela.");
+							$this->addError("Vous n'avez pas les droits pour faire cela.");
 							return $ret;
 						}
 					}
