@@ -1,14 +1,14 @@
 ﻿<?php
 
 require_once('api/IModel.class.php');
-include_once('api/Model.class.php');
+require_once('api/Model.class.php');
 require_once('api/Obiwan.class.php');
 require_once('api/utility.php');
 
 define('TABLE_NAME_ADH', '`t_adherent_adh`');
 define('TABLE_NAME_CPT', '`t_compte_cpt`');
 
-/*
+/*!
  * \class ModelUser
  * \brief Modèle représentant les tables t_adherent_adh et t_compte_cpt.
  * 
@@ -59,15 +59,20 @@ class ModelUser extends Model implements IModel
 				( :cpt_pseudo
 				, :cpt_password
 				)';
-	private static $del_adh_query = 'DELETE FROM '. TABLE_NAME_ADH .' WHERE adh_id=';
-	private static $del_cpt_query = 'DELETE FROM '. TABLE_NAME_CPT .' WHERE adh_id=';
-	private static $get_usr_query = 'SELECT * FROM '. TABLE_NAME_ADH .' NATURAL JOIN '.
-											   TABLE_NAME_CPT .' WHERE cpt_pseudo=';
+	private static $del_adh_query =
+			'DELETE FROM '. TABLE_NAME_ADH .' WHERE adh_id=';
+	private static $del_cpt_query =
+			'DELETE FROM '. TABLE_NAME_CPT .' WHERE adh_id=';
+	private static $get_usr_query =
+			'SELECT * FROM '. TABLE_NAME_ADH .' NATURAL JOIN '.
+							  TABLE_NAME_CPT .' WHERE cpt_pseudo=';
 
 	/*!
-	 * \brief Constructeur.
+	 * \brief Constructeur, remplie les données contenues dans $array.
+	 * \param $array Liste des champs contenant les données.
 	 * 
-	 *  Remplie les données du modèle avec $array.
+	 *  Remplie les données du modèle en s'assurant que tous les champs de la
+	 * table TABLE_NAME_ACT sont présent.
 	 */
 	public function __construct($array)
 	{
@@ -94,8 +99,8 @@ class ModelUser extends Model implements IModel
 	 * 
 	 *  Enregistre un adhérent et son compte utilisateur avec les données contenu
 	 * dans $array, qui doit être indexé de la même manière que dans les tables.
-	 *  Après exécution, vérifier qu'une erreur n'a pas été détectée avec
-	 * ModelUser::hasErrors().
+	 *  Après exécution, il est important de vérifier qu'une erreur n'a pas été
+	 * détectée grâce à hasErrors().
 	 */
 	public function tryAddAccount($array)
 	{
@@ -130,10 +135,10 @@ class ModelUser extends Model implements IModel
 	}
 
 	/*!
-	 * \brief Enregistre les un compte.
+	 * \brief Enregistre un compte.
 	 * 
 	 *  Exécute "le sale boulot" pour ajouter un compte : vérification de la
-	 * validité de toutes les données
+	 * validité de toutes les données du modèle, requêtes SQL etc...
 	 */
 	private function tryAddAccountPrivate()
 	{
@@ -296,16 +301,32 @@ class ModelUser extends Model implements IModel
 	{
 	}
 
+	/*!
+	 * \brief Renvoie les données du modèle.
+	 * \return Un array.
+	 */
 	public function getInfos()
 	{
 		return $this->data;
 	}
 
+	/*!
+	 * \brief Renvoie les résultats de la dernière requête effectuée.
+	 * \return Un array.
+	 */
 	public function getRows()
 	{
 		return $this->query_results;
 	}
 
+	/*!
+	 * \brief Inscrit un utilisateur avec $array pour données.
+	 * \param $array Données de l'utilisateur à inscrire.
+	 * 
+	 *  Crée un nouvel adhérent et son compte utilisateur associé.
+	 *  Après exécution, il est important de vérifier qu'une erreur n'a pas été
+	 * détectée grâce à hasErrors().
+	 */
 	public static function signIn($array)
 	{
 		$ret = new ModelUser($array);
@@ -314,16 +335,41 @@ class ModelUser extends Model implements IModel
 		return $ret;
 	}
 
+	/*!
+	 * \brief Renvoie le modèle de l'utilisateur correspondant au pseudo envoyé.
+	 * \param $username Pseudo de l'utilisateur à récupérer.
+	 * 
+	 *  Récupère un compte utilisateur et ses données adhérent correspondant au
+	 * pseudo $username.
+	 *  Après exécution, il est important de vérifier qu'une erreur n'a pas été
+	 * détectée grâce à hasErrors().
+	 */
 	public static function getUser($username)
 	{
 		return ModelUser::getUserPrivate($username, true);
 	}
 
-	private static function getUserPrivate($username, $verif)
+	/*!
+	 * \brief Récupère un utilisateur.
+	 * \param $username Pseudo de l'utilisateur à récupérer.
+	 * \param $check Booléen indiquant s'il faut vérifier l'utilisateur.
+	 * 
+	 *  Récupère l'utilisateur correspondant au pseudo $username. Si $check
+	 * vaut true, une comparaison entre l'utilisateur en question et celui
+	 * enregistré dans la session (si quelqu'un est connectée) est effectué.
+	 *  Si les pseudos correspondent (l'utilisateur veut voir ses propres
+	 * données), les données sont récupérées à condition que l'abonnement soit
+	 * à jour.
+	 *  Sinon, si l'utilisateur souhaitant visionner ne possède pas les droits
+	 * nécessaires pour connaître les données de l'utilisateur à récupérer
+	 * (animateurs : peut gérer les petits bidouilleurs ; gestionnaires : tous
+	 * les droits ; admin : tous les droits), une erreur est produite.
+	 */
+	private static function getUserPrivate($username, $check)
 	{
 		$ret = new ModelUser(array());
 		// si verif, alors verifier le droit d'acceder a ce compte
-		if ($verif)
+		if ($check)
 		{
 			if (!isset($_SESSION['cpt_pseudo']))
 			{
@@ -331,34 +377,35 @@ class ModelUser extends Model implements IModel
 				return $ret;
 			}
 
+			// récupération du groupe de l'utilisateur
+			$db = Obiwan::PDO();
+			$q = $db->query("SELECT `grp_id`
+							 FROM `t_groupe_grp`
+							 NATURAL JOIN `t_abonnement_abo`
+							 WHERE `cpt_pseudo` = '" . $_SESSION['cpt_pseudo'] . "'
+							   AND `abo_fin` > NOW()");
+															
+			// pas d'abonnement, pas de droit
+			if (!is_null($q))
+			{
+				$this->addError("Votre abonnement n'est pas à jour.");
+				return $ret;
+			}
+
 			if ($_SESSION['cpt_pseudo'] != $username)
 			{
 
-				// récupération du groupe de l'utilisateur
-				$db = Obiwan::PDO();
-				$q = $db->query("SELECT `grp_id`
-												FROM `t_groupe_grp`
-												NATURAL JOIN `t_abonnement_abo`
-												WHERE `cpt_pseudo` = '" . $_SESSION['cpt_pseudo'] . "'
-															AND `abo_fin` > NOW()");
-															
-				// pas d'abonnement, pas de droit
-				if (!is_null($q))
-				{
-					$this->addError("Votre abonnement n'est pas à jour.");
-					return $ret;
-				}
 			
 				$res = $q->fetchAll();
 				switch ($res['grp_id'])
 				{
-					// pas de droit pour les petits/grands debrouillards
+					// Pas de droit pour les petits/grands debrouillards.
 					case Obiwan::GROUP_SMALL:
 					case Obiwan::GROUP_BIG:
 						$this->addError("Vous n'avez pas les droits pour accéder à ces informations.");
 						return;
 
-					// un animateur ne peut que accéder aux petits/grands debrouillards
+					// Un animateur ne peut que accéder aux petits/grands debrouillards.
 					case Obiwan::GROUP_ANIMATOR:
 					{
 						$q2 = $db->query("SELECT `grp_id`
@@ -367,7 +414,7 @@ class ModelUser extends Model implements IModel
 									WHERE `cpt_pseudo` = '" . $username . "'
 												AND `abo_fin` > NOW()");
 
-						// pas d'abonnement, pas de droit
+						// Pas d'abonnement, pas de droit.
 						if (!is_null($q))
 						{
 							$this->addError("Erreur.");
@@ -381,7 +428,7 @@ class ModelUser extends Model implements IModel
 						}
 					}
 
-					// accès à tout pour le reste
+					// Accès à tout pour le reste.
 					case Obiwan::GROUP_MANAGER:
 					case Obiwan::GROUP_ADMIN:
 					default: break;
@@ -418,6 +465,15 @@ class ModelUser extends Model implements IModel
 		return $ret;
 	}
 
+	/*!
+	 * \brief Tente la connexion de l'utilisateur envoyé en paramètre.
+	 * \param $array Array contenant les données de l'utilisateur.
+	 * 
+	 *  Tente la connexion de l'utilisateur. Récupère d'abord les données de
+	 * l'utilisateur grâce à getUserPrivate(), puis vérifie s'il n'y a pas
+	 * d'erreur. Ensuite, s'assure que les mots de passe correspondent puis
+	 * renvoie enfin l'utilisateur en question.
+	 */
 	public static function tryConnect($array)
 	{
 		$ret = ModelUser::getUserPrivate($array['cpt_pseudo'], false);

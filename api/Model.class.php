@@ -12,8 +12,15 @@
 class Model
 {
 	protected $errors = array();	//!< Contient les erreurs éventuellement apparues lors de traitements.
-	protected $data = array();
+	protected $data = array();		//!< Contient les données du modèle.
 
+	/*!
+	 * \brief Renvoie la valeur du champ $var.
+	 * \param $var Champs de la table à récupérer.
+	 * 
+	 *  Renvoie la valeur du champs correspondant à la table. Si la clé $var
+	 * n'est pas un champs de la table, renvoie une chaîne de caractères vide.
+	 */
 	public function __get($var)
 	{
 		if(!array_key_exists($var, $this->data)) {

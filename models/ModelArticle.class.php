@@ -1,4 +1,5 @@
 <?php
+
 include_once('api/bdd.php');
 include_once('api/IModel.class.php');
 include_once('api/Model.class.php');
@@ -32,6 +33,13 @@ class ModelArticle extends Model implements IModel
 	private $del_act_query = 'DELETE FROM '. TABLE_NAME_ACT .' WHERE act_id = ';
 	private $get_act_query = 'SELECT * FROM '. TABLE_NAME_ACT . 'WHERE ';
 
+	/*!
+	 * \brief Constructeur, remplie les données contenues dans $array.
+	 * \param $array Liste des champs contenant les données.
+	 * 
+	 *  Remplie les données du modèle en s'assurant que tous les champs de la
+	 * table TABLE_NAME_ACT sont présent.
+	 */
 	public function __construct($array)
 	{
 		$this->data = array_merge(array(
