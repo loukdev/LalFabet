@@ -10,10 +10,8 @@ class Obiwan
 		static $pdo = NULL;
 		if (is_null($pdo))
 		{
-			$str = 'mysql:dbname='. DB_NAME .';'.
-							'host='. DB_HOST;
-			print($str);
-			$pdo = new PDO(	$str,
+			$pdo = new PDO(	'mysql:dbname='. DB_NAME .';'.
+							'host='. DB_HOST,
 							DB_USER,
 							DB_PASSWD);
 		}

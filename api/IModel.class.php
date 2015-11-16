@@ -4,7 +4,9 @@
  * \interface IModel
  * \brief Interface à implémenter par les modèles.
  * 
- *  Cette interface définit le squelette d'un modèle. Un modèle représente une table de la base de donnée.
+ *  Cette interface définit le squelette d'un modèle. Un modèle représente une
+ * table de la base de donnée.
+ *  Les modèles doivent implémenter cette interface.
  */
 interface IModel
 {
