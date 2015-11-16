@@ -60,7 +60,6 @@ class ModelArticle extends Model implements IModel
 		try
 		{
 			$db = Obiwan::PDO();
-			$db->query("SET NAMES 'utf8'");
 			$q  = $db->query('SELECT * FROM '. TABLE_NAME_ACT);
 			if (!$q) {
 				throw new Exception(__CLASS__ . '::getAll : select query failed.');

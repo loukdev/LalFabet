@@ -14,6 +14,7 @@ class Obiwan
 							'host='. DB_HOST,
 							DB_USER,
 							DB_PASSWD);
+			$pdo->query("SET NAMES 'utf8'");
 		}
 
 		return $pdo;

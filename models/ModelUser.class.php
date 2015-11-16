@@ -399,13 +399,6 @@ class ModelUser extends Model implements IModel
 				throw new Exception($db->errorInfo()[2]);
 			else
 				$ret->query_results = $q;
-
-			/*if ($q->rowCount() > 0)
-				$ret->query_results = $q;
-			else
-			{
-				$ret->query_results = false;
-			}*/
 		}
 		catch (Exception $e)
 		{
