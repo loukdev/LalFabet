@@ -4,3 +4,6 @@ nbproject/
 # doxygen
 /doxygen
 docs/
+
+# pouet
+config.php
