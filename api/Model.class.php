@@ -9,7 +9,7 @@
  *  Cette classe définit les comportements par défaut de quelques méthodes,
  * notamment pour la gestion des erreurs.
  */
-abstract class Model
+class Model
 {
 	protected $errors = array();	//!< Contient les erreurs éventuellement apparues lors de traitements.
 	protected $data = array();

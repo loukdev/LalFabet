@@ -393,25 +393,28 @@ class ModelUser extends Model implements IModel
 		{
 			$db = Obiwan::PDO();
 
-			$q = $db->query(self::$get_usr_query . $username);
+			$q = $db->query(self::$get_usr_query . "'$username'");
 
-			if ($q->rowCount() > 0)
-			{
+			if(!$q or $q->rowCount() <= 0)
+				throw new Exception($db->errorInfo()[2]);
+			else
 				$ret->query_results = $q;
-			}
+
+			/*if ($q->rowCount() > 0)
+				$ret->query_results = $q;
 			else
 			{
 				$ret->query_results = false;
-			}
+			}*/
 		}
 		catch (Exception $e)
 		{
-			parent::addError('Une erreur serveur est survenue.');
+			$ret->addError('Une erreur serveur est survenue. '. $e->getMessage());
 		}
 
 		if (!$ret->query_results)
 		{
-			parent::addError("Aucun utilisateur n'a pour nom $username.");
+			$ret->addError("Aucun utilisateur n'a pour nom $username.");
 		}
 		else
 		{
@@ -429,7 +432,7 @@ class ModelUser extends Model implements IModel
 		{
 			if ($array['cpt_password'] != $ret->data['cpt_password'])
 			{
-				parent::addError('Mauvais mot de passe.');
+				$ret->addError('Mauvais mot de passe.');
 			}
 		}
 

@@ -2,7 +2,7 @@
 <?php 
 
 if ($this->model->hasErrors())
-{ 
+{
   ?>
  
    <form style="margin: auto; margin-top: 50px; width: 400px; text-align: center;" id="inscription_form" method="post" action="?connect">
@@ -33,9 +33,9 @@ else
   }
   else
   {
-    session_start();
-    $_SESSION["cpt_pseudo"] = $this->get("cpt_pseudo");
-    header("Location: ?user=" . $this->get("cpt_pseudo"));
+	  session_start();
+    $_SESSION["cpt_pseudo"] = $this->model->cpt_pseudo;
+    header("Location: ?user=" . $this->model->cpt_pseudo);
   }
 }
 
