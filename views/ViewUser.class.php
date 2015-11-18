@@ -14,8 +14,10 @@ class ViewUser implements IView
 	private $model = NULL;
 
 	/*!
-	 * \brief Constructeur.
 	 * \param $model Modèle de l'utilisateur à afficher.
+	 * 
+	 *  Génère et affiche le HTML s'il n'y a pas d'erreurs. Sinon affiche les
+	 * erreurs.
 	 */
 	public function __construct($model)
 	{

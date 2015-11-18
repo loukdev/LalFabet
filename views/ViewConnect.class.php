@@ -22,8 +22,8 @@ class ViewConnect implements IView
 	}
 
 	/*!
-	 * Si le modèle ne contient pas de données, affiche la page de connexion.
-	 * Sinon, tente de connecter l'utilisateur avec les données POST.
+	 *  Si le modèle ne contient pas de données, affiche la page de connexion.
+	 *  Sinon, tente de connecter l'utilisateur avec les données POST.
 	 * Ce traitement est effectué dans connexion_section.php.
 	 */
 	public function show()
