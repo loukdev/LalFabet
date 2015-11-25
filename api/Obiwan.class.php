@@ -1,5 +1,10 @@
 <?php
-require_once('config.php');
+include_once('config.php');
+
+define('DB_NAME', 'LalFabet');
+define('DB_HOST', 'localhost');
+define('DB_USER', 'root');
+define('DB_PASSWD', '');
 
 /*!
  * \class Obiwan
