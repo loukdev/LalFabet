@@ -18,7 +18,7 @@ class Model
 	 * \brief Renvoie la valeur du champ $var.
 	 * \param $var Champs de la table à récupérer.
 	 * 
-	 *  Renvoie la valeur du champs correspondant à la table. Si la clé $var
+	 *  Renvoie la valeur du champ correspondant à la table. Si la clé $var
 	 * n'est pas un champs de la table, renvoie une chaîne de caractères vide.
 	 */
 	public function __get($var)
@@ -41,7 +41,7 @@ class Model
 
 	/*!
 	 * \brief Renvoie la liste des erreurs.
-	 * \return La liste des erreurs.
+	 * \return Un array.
 	 */
 	public function getErrors()
 	{

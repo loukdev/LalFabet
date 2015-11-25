@@ -1,8 +1,10 @@
 <?php
 
-include_once('api/bdd.php');
 include_once('api/IModel.class.php');
 include_once('api/Model.class.php');
+include_once('api/Obiwan.class.php');
+
+define('TABLE_NAME_ACT', '`t_actualite_act`');
 
 /*!
  * \class ModelArticle
@@ -16,7 +18,6 @@ include_once('api/Model.class.php');
  *   - la récupération d'un article avec son id ;
  */
 
-define('TABLE_NAME_ACT', '`t_actualite_act`');
 class ModelArticle extends Model implements IModel
 {
 	private $add_act_query = 'INSERT INTO `.'. TABLE_NAME_ACT .'`
@@ -50,6 +51,15 @@ class ModelArticle extends Model implements IModel
 		  , 'act_date' => ''), $array);
 	}
 
+	/*!
+	 * \brief Renvoie l'article correspondant à l'id envoyé.
+	 * \param $id_or_title Id ou titre de l'article
+	 * \return Le modèle associé à l'id.
+	 * 
+	 *  Renvoie l'article correspondant à l'id envoyé, qui peut aussi être son
+	 * titre.
+	 *  Lance une exception si la requête a échouée.
+	 */
 	public static function get($id_or_title)
 	{
 		$str_id = 'act_titre = ';
@@ -60,7 +70,7 @@ class ModelArticle extends Model implements IModel
 		if(!$result) {
 			throw new Exception(__CLASS__ . '::get : select query failed.');
 		} else {
-			return $result->fetch(); }
+			return new ModelArticle($result->fetch()); }
 	}
 
 	public static function getAll()

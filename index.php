@@ -1,7 +1,6 @@
 <?php
 session_start();
 
-include_once("api/bdd.php");
 include_once("views/ViewSignIn.class.php");
 include_once("views/ViewHome.class.php");
 include_once("views/ViewUser.class.php");

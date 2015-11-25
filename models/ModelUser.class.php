@@ -18,7 +18,10 @@ define('TABLE_NAME_CPT', '`t_compte_cpt`');
  *  Il permet :
  *   - la création d'un adhérent et de son compte utilisateur.
  *   - la récupération d'un adhérent et de son compte utilisateur ;
- *  \todo Suppression d'un utilisateur dans la base de données.
+ * 
+ * \todo Suppression d'un utilisateur dans la base de données.
+ * \todo Déléguer le code de vérification d'abonnement et d'appartenance à un
+ * groupe aux futurs modèles ModelGroup et ModelSubscription.
  */
 class ModelUser extends Model implements IModel
 {
@@ -99,8 +102,10 @@ class ModelUser extends Model implements IModel
 	 * 
 	 *  Enregistre un adhérent et son compte utilisateur avec les données contenu
 	 * dans $array, qui doit être indexé de la même manière que dans les tables.
-	 *  Après exécution, il est important de vérifier qu'une erreur n'a pas été
-	 * détectée grâce à hasErrors().
+	 * 
+	 *  Ne lance pas d'exception : s'il y a une erreur, elle est ajoutée à la
+	 * liste interne d'erreurs. La présence d'erreur peut être vérifiée grâce à
+	 * hasErrors() et elles peuvent être récupérées via getErrors().
 	 */
 	public function tryAddAccount($array)
 	{
@@ -130,8 +135,6 @@ class ModelUser extends Model implements IModel
 		{
 			$this->addError('');
 		}
-
-		$this->data = array_merge($this->data, array('errors' => $this->errors));
 	}
 
 	/*!
@@ -139,6 +142,8 @@ class ModelUser extends Model implements IModel
 	 * 
 	 *  Exécute "le sale boulot" pour ajouter un compte : vérification de la
 	 * validité de toutes les données du modèle, requêtes SQL etc...
+	 * 
+	 *  Ne lance pas d'exception (voir tryAddAccount()).
 	 */
 	private function tryAddAccountPrivate()
 	{

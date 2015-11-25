@@ -10,8 +10,19 @@
  */
 interface IModel
 {
-	public function save();		//!< Sauvegarde l'instance dans la base de donnée.
-	public function delete();	//!< Supprime l'instance de la base de donnée.
+	/*!
+	 * \brief Sauvegarde l'instance dans la base de donnée.
+	 * 
+	 *  Lance une exception si la requête a échouée.
+	 */
+	public function save();
+
+	/*!
+	 * \brief Supprime l'instance de la base de donnée.
+	 * 
+	 *  Lance une exception si la requête a échouée.
+	 */
+	public function delete();
 
 	/*!
 	 * \brief Renvoie la valeur de la clé $var.
@@ -25,5 +36,10 @@ interface IModel
 	 */
 	public function __get($var);
 
-	public static function getAll();	//!< Récupère toutes les entrées de la table correspondant au modèle.
+	/*!
+	 * \brief Récupère toutes les entrées de la table correspondant au modèle.
+	 * 
+	 *  Lance une exception si la requête a échouée.
+	 */
+	public static function getAll();
 }

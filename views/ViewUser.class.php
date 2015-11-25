@@ -7,7 +7,7 @@ include_once('api/IView.class.php');
  * 
  *  Cette vue permet d'afficher toutes les informations de l'adhérent, dont
  *  l'identifiant est passé via GET.
- *  Usage : <url du site>/?user=pseudo.
+ *  Usage : <url du site>/?user=pseudo
  */
 class ViewUser implements IView
 {
@@ -27,6 +27,9 @@ class ViewUser implements IView
 	/*!
 	 * \brief Génère et affiche le code HTML.
 	 * \see IView::show().
+	 * 
+	 *  Si le modèle contient des erreurs, elles sont affichées.
+	 *  Sinon, les informations de l'adhérent sont affichées.
 	 */
 	public function show()
 	{

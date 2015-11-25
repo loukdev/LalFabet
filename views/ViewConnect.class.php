@@ -6,7 +6,7 @@ include_once('api/IView.class.php');
  * \brief Vue représentant la page de connexion.
  * 
  *  Cette vue permet de se connecter sur le site.
- *  Usage : <url du site>/?connect.
+ *  Usage : <url du site>/?connect
  */
 class ViewConnect implements IView
 {
@@ -22,9 +22,12 @@ class ViewConnect implements IView
 	}
 
 	/*!
+	 * \brief Génère et affiche le code HTML.
+	 * \see IView::show().
+	 * 
 	 *  Si le modèle ne contient pas de données, affiche la page de connexion.
 	 *  Sinon, tente de connecter l'utilisateur avec les données POST.
-	 * Ce traitement est effectué dans connexion_section.php.
+	 *  Ce traitement est effectué dans connexion_section.php.
 	 */
 	public function show()
 	{
