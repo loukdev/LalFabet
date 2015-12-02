@@ -28,6 +28,13 @@ class ViewConnect implements IView
 	 *  Si le modèle ne contient pas de données, affiche la page de connexion.
 	 *  Sinon, tente de connecter l'utilisateur avec les données POST.
 	 *  Ce traitement est effectué dans connexion_section.php.
+	 * 
+	 *  En théorie, le template n'est pas sensé contenir de la logique. Cette
+	 * partie du code est à revoir.
+	 * 
+	 * \todo Déplacer le code de connexion du fichier connection_section.php
+	 * vers le modèle (soucis : la session ne semble pas se lancer lorsque
+	 * session_start() est appelé dans ModelUser::tryConnect()).
 	 */
 	public function show()
 	{
