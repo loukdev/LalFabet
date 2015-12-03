@@ -20,7 +20,7 @@ define('TABLE_NAME_ACT', '`t_actualite_act`');
 
 class ModelArticle extends Model implements IModel
 {
-	private $add_act_query = 'INSERT INTO `.'. TABLE_NAME_ACT .'`
+	private static $add_act_query = 'INSERT INTO `.'. TABLE_NAME_ACT .'`
 		 (`act_id`, 
 		  `cpt_pseudo`,
 		  `act_titre`,
@@ -31,15 +31,15 @@ class ModelArticle extends Model implements IModel
 		  , :act_titre
 		  , :act_contenu
 		  , :act_date)';
-	private $del_act_query = 'DELETE FROM '. TABLE_NAME_ACT .' WHERE act_id = ';
-	private $get_act_query = 'SELECT * FROM '. TABLE_NAME_ACT . 'WHERE ';
+	private static $del_act_query = 'DELETE FROM '. TABLE_NAME_ACT .' WHERE act_id = ';
+	private static $get_act_query = 'SELECT * FROM '. TABLE_NAME_ACT . 'WHERE ';
 
 	/*!
 	 * \brief Constructeur, remplie les données contenues dans $array.
 	 * \param $array Liste des champs contenant les données.
 	 * 
 	 *  Remplie les données du modèle en s'assurant que tous les champs de la
-	 * table TABLE_NAME_ACT sont présent.
+	 * table TABLE_NAME_ACT sont présents.
 	 */
 	public function __construct($array)
 	{
@@ -78,8 +78,9 @@ class ModelArticle extends Model implements IModel
 		try
 		{
 			$db = Obiwan::PDO();
-			$q  = $db->query('SELECT * FROM '. TABLE_NAME_ACT);
-			if (!$q) {
+			$q  = $db->query('SELECT * FROM '. TABLE_NAME_ACT .
+							' ORDER BY act_debut DESC, act_titre ASC');
+			if(!$q) {
 				throw new Exception(__CLASS__ . '::getAll : select query failed.');
 			} else {
 				return $q->fetchAll(); }
