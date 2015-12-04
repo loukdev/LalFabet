@@ -79,7 +79,7 @@ class ModelArticle extends Model implements IModel
 		{
 			$db = Obiwan::PDO();
 			$q  = $db->query('SELECT * FROM '. TABLE_NAME_ACT .
-							' ORDER BY act_debut DESC, act_titre ASC');
+							' ORDER BY act_date DESC, act_titre ASC');
 			if(!$q) {
 				throw new Exception(__CLASS__ . '::getAll : select query failed.');
 			} else {

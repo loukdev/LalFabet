@@ -1,4 +1,4 @@
---
+﻿--
 -- Dumping data for table `t_groupe_grp`
 --
 
@@ -20,7 +20,7 @@ INSERT INTO `t_compte_cpt` (`cpt_pseudo`, `cpt_password`) VALUES
 --
 
 INSERT INTO `t_adherent_adh` (`cpt_pseudo`, `adh_nom`, `adh_prenom`, `adh_date_naissance`, `adh_rue`, `adh_num_rue`, `adh_code_postal`, `adh_ville`, `adh_telephone1`, `adh_mail`) VALUES
-('loukiluk', 'Louka', 'Fraboulet', '1995-02-11', 'Edouard Corps-à-bière', 42, '29200', 'Brest', '0296159501', 'hihi@rofl.ninja'),
+('loukiluk', 'Louka', 'Fraboulet', '1995-02-11', 'Edouard Corbière', 42, '29200', 'Brest', '0296159501', 'hihi@rofl.ninja'),
 ('Shumush', 'Arthur', 'Blanleuil', '1995-01-02', 'harteloire', 12, '29200', 'Brest', '0296159506', 'hehe@rofl.ninja');
 
 --

@@ -5,6 +5,8 @@ require_once('api/Model.class.php');
 require_once('api/Obiwan.class.php');
 require_once('api/utility.php');
 
+require_once('models/ModelSubscription.class.php');
+
 define('TABLE_NAME_ADH', '`t_adherent_adh`');
 define('TABLE_NAME_CPT', '`t_compte_cpt`');
 
@@ -75,7 +77,7 @@ class ModelUser extends Model implements IModel
 	 * \param $array Liste des champs contenant les données.
 	 * 
 	 *  Remplie les données du modèle en s'assurant que tous les champs de la
-	 * table TABLE_NAME_ACT sont présent.
+	 * table TABLE_NAME_ACT sont présents.
 	 */
 	public function __construct($array)
 	{
@@ -94,6 +96,155 @@ class ModelUser extends Model implements IModel
 			, 'adh_telephone2' => ''
 			, 'adh_telephone3' => ''
 			, 'adh_mail' => ''), $array);
+	}
+
+	/*!
+	 * \brief Renvoie le modèle de l'utilisateur correspondant au pseudo envoyé.
+	 * \param $username Pseudo de l'utilisateur à récupérer.
+	 * 
+	 *  Récupère un compte utilisateur et ses données adhérent correspondant au
+	 * pseudo $username.
+	 *  Après exécution, il est important de vérifier qu'une erreur n'a pas été
+	 * détectée grâce à hasErrors().
+	 */
+	public static function getUser($username)
+	{
+		return ModelUser::getUserPrivate($username, true);
+	}
+
+	public static function exists($username)
+	{
+		$db = Obiwan::PDO();
+		try {
+			$db->query(self::$get_usr_query . $username);
+		} catch (Exception $ex) {
+			return false;
+		}
+
+		return $db ? true : false;
+	}
+
+	/*!
+	 * \brief Récupère un utilisateur.
+	 * \param $username Pseudo de l'utilisateur à récupérer.
+	 * \param $check Booléen indiquant s'il faut vérifier l'utilisateur.
+	 * \return Le modèle de l'utilisateur à visionner.
+	 * 
+	 *  Récupère l'utilisateur correspondant au pseudo $username. Si $check
+	 * vaut true, une comparaison entre l'utilisateur en question et celui
+	 * enregistré dans la session (si quelqu'un est connectée) est effectuée.
+	 *  Si les pseudos correspondent (l'utilisateur veut voir ses propres
+	 * données), les données sont récupérées à condition que l'abonnement soit
+	 * à jour.
+	 *  Sinon, si l'utilisateur souhaitant visionner ne possède pas les droits
+	 * nécessaires pour connaître les données de l'utilisateur à récupérer
+	 * (animateurs : peut gérer les petits bidouilleurs ; gestionnaires : tous
+	 * les droits ; admin : tous les droits), une erreur est produite.
+	 *
+	 * Pour vérifier la présence d'erreurs, voir hasErrors() et getErrors().
+	 */
+	private static function getUserPrivate($username, $check)
+	{
+		$ret = new ModelUser(array());
+		// si verif, alors verifier le droit d'acceder a ce compte
+
+		if($check)
+		{
+			if(!isset($_SESSION['cpt_pseudo']))
+			{
+				$ret->addError("Vous n'êtes pas connecté.");
+				return $ret;
+			}
+
+			// Pas d'abonnement, pas de droit (même pas celui de regarder son profil).
+			if(empty($_SESSION['grp_id']))
+			{
+				$ret->addError("Votre abonnement n'est pas à jour.");
+				return $ret;
+			}
+
+			if($_SESSION['cpt_pseudo'] != $username)
+			{
+				// On récupère les données de l'utilisateur visualisé.
+				$other = self::getUserPrivate($username, false);
+
+				// S'il y a eu une erreur (l'utilisateur n'existe pas, par exemple), on s'arrête.
+				if($other->hasErrors())
+				{
+					$ret->errors = $other->errors;
+					return $ret;
+				}
+
+				// On tente de récupérer les droits de l'utilisateur connecté.
+				try {
+					$user_sub = ModelGroup::get($_SESSION['grp_id']);
+				} catch (Exception $ex) {
+					$ret->addError($ex->getMessage());
+					return $ret;
+				}
+
+				// On tente de récupérer l'abonnement de l'utilisateur visualisé.
+				try {
+					ModelSubscription::getFromUser($other->cpt_pseudo);
+				} catch (Exception $ex) {
+				// Si l'utilisateur visualisé n'a pas encore d'abonnement, l'utilisateur connecté
+				// doit avoir un niveau suffisant pour le visualier (de même que pour le valider).
+					if($user_sub->grp_niveau < 3)
+					{
+						$ret->addError("Vous n'avez pas les droits suffisants pour visualiser les personnes sans abonnement.");
+						return $ret;
+					}
+				}
+
+				// On vérifie que l'utilisateur connecté à les droits nécessaires.
+				if(!$other->isMinor() && $user_sub->grp_acces_autre != 1 ||
+					$other->isMinor() && $user_sub->grp_acces_petit != 1)
+				{
+					$ret->addError("Vous n'avez pas les droits nécessaires pour visualiser ce membre.");
+					return $ret;
+				}
+
+			}
+		}
+
+		try
+		{
+			$db = Obiwan::PDO();
+
+			$q = $db->query(self::$get_usr_query . "'$username'");
+
+			if(!$q or $q->rowCount() <= 0)
+				throw new Exception($db->errorInfo()[2]);
+			else
+				$ret->query_results = $q;
+		}
+		catch (Exception $e) {
+			if(!empty($e->getMessage()))
+				$ret->addError('Une erreur serveur est survenue. '. $e->getMessage());
+		}
+
+		if (!$ret->query_results)
+		{
+			$ret->addError("Aucun utilisateur n'a pour nom $username.");
+		}
+		else
+		{
+			$arr = $ret->query_results->fetchAll();
+			$ret->data = $arr[0];
+		}
+
+		return $ret;
+	}
+
+	public function isMinor()
+	{
+		$date = strtotime(str_replace('/', '-', $this->data['adh_date_naissance']));
+		$diff = time() - $date;
+
+		if(!$date)
+			return false;
+		else
+			return $diff < 18 * 356 * 24 * 3600;
 	}
 
 	/*!
@@ -192,20 +343,17 @@ class ModelUser extends Model implements IModel
 				$nombre_num_valides++; }
 		}
 
+		$time = strtotime(str_replace('/', '-', $this->data['adh_date_naissance']));
 		// verification date de naissance
-		$time = strtotime($this->data['adh_date_naissance']);
-		$diff_time = 0;
-		if ($time != false and ($diff_time = time() - $time) > 0)
+		if ($time != false and time() - $time > 0)
 		{
-			if ($diff_time < 18 * 356 * 24 * 3600 && $nombre_num_valides < 2) {
+			if ($this->isMinor() && $nombre_num_valides < 2)
 				$this->addError('Si vous avez moins de 18 ans, vous avez besoin de deux numéros de téléphone.');
-			} else {
-				$this->data['adh_date_naissance'] = date('Y-m-d', $time); }
+			else
+				$this->data['adh_date_naissance'] = date('Y-m-d', $time);
 		}
 		else
-		{
 			$this->addError('Date invalide.');
-		}
     
 		// vérification adresse mail
 		if (!preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $this->data['adh_mail']))
@@ -294,9 +442,7 @@ class ModelUser extends Model implements IModel
 			$db->commit();
 		} catch (Exception $e) {
 			if(!is_null($db))
-			{
 				$db->rollBack();
-			}
 
 			$this->addError($e->getMessage());
 		}
@@ -304,6 +450,26 @@ class ModelUser extends Model implements IModel
 
 	public static function getAll()
 	{
+		try
+		{
+			$result = array();
+			$db = Obiwan::PDO();
+			$q  = $db->query('SELECT * FROM '. TABLE_NAME_CPT);
+			if(!$q)
+				throw new Exception(__CLASS__ . '::getAll : select cpt query failed.');
+			else
+				$result = array_merge($result, $q->fetchAll());
+
+			$q  = $db->query('SELECT * FROM '. TABLE_NAME_ADH);
+			if(!$q)
+				throw new Exception(__CLASS__ . '::getAll : select adh query failed.');
+			else
+				return array_merge($result, $q->fetchAll());
+		}
+		catch (Exception $_)
+		{
+			return array();
+		}
 	}
 
 	/*!
@@ -341,154 +507,43 @@ class ModelUser extends Model implements IModel
 	}
 
 	/*!
-	 * \brief Renvoie le modèle de l'utilisateur correspondant au pseudo envoyé.
-	 * \param $username Pseudo de l'utilisateur à récupérer.
-	 * 
-	 *  Récupère un compte utilisateur et ses données adhérent correspondant au
-	 * pseudo $username.
-	 *  Après exécution, il est important de vérifier qu'une erreur n'a pas été
-	 * détectée grâce à hasErrors().
-	 */
-	public static function getUser($username)
-	{
-		return ModelUser::getUserPrivate($username, true);
-	}
-
-	/*!
-	 * \brief Récupère un utilisateur.
-	 * \param $username Pseudo de l'utilisateur à récupérer.
-	 * \param $check Booléen indiquant s'il faut vérifier l'utilisateur.
-	 * 
-	 *  Récupère l'utilisateur correspondant au pseudo $username. Si $check
-	 * vaut true, une comparaison entre l'utilisateur en question et celui
-	 * enregistré dans la session (si quelqu'un est connectée) est effectué.
-	 *  Si les pseudos correspondent (l'utilisateur veut voir ses propres
-	 * données), les données sont récupérées à condition que l'abonnement soit
-	 * à jour.
-	 *  Sinon, si l'utilisateur souhaitant visionner ne possède pas les droits
-	 * nécessaires pour connaître les données de l'utilisateur à récupérer
-	 * (animateurs : peut gérer les petits bidouilleurs ; gestionnaires : tous
-	 * les droits ; admin : tous les droits), une erreur est produite.
-	 */
-	private static function getUserPrivate($username, $check)
-	{
-		$ret = new ModelUser(array());
-		// si verif, alors verifier le droit d'acceder a ce compte
-		if ($check)
-		{
-			if (!isset($_SESSION['cpt_pseudo']))
-			{
-				$ret->addError("Vous n'êtes pas connecté.");
-				return $ret;
-			}
-
-			// récupération du groupe de l'utilisateur
-			$db = Obiwan::PDO();
-			$q = $db->query("SELECT `grp_id`
-							 FROM `t_groupe_grp`
-							 NATURAL JOIN `t_abonnement_abo`
-							 WHERE `cpt_pseudo` = '" . $_SESSION['cpt_pseudo'] . "'
-							   AND `abo_fin` > NOW()");
-															
-			// pas d'abonnement, pas de droit
-			if (!is_null($q))
-			{
-				$this->addError("Votre abonnement n'est pas à jour.");
-				return $ret;
-			}
-
-			if ($_SESSION['cpt_pseudo'] != $username)
-			{
-
-			
-				$res = $q->fetchAll();
-				switch ($res['grp_id'])
-				{
-					// Pas de droit pour les petits/grands debrouillards.
-					case Obiwan::GROUP_SMALL:
-					case Obiwan::GROUP_BIG:
-						$this->addError("Vous n'avez pas les droits pour accéder à ces informations.");
-						return;
-
-					// Un animateur ne peut que accéder aux petits/grands debrouillards.
-					case Obiwan::GROUP_ANIMATOR:
-					{
-						$q2 = $db->query("SELECT `grp_id`
-									FROM `t_groupe_grp`
-									NATURAL JOIN `t_abonnement_abo`
-									WHERE `cpt_pseudo` = '" . $username . "'
-												AND `abo_fin` > NOW()");
-
-						// Pas d'abonnement, pas de droit.
-						if (!is_null($q))
-						{
-							$this->addError("Erreur.");
-							return $ret;
-						}
-						$res2 = $q2->fetchAll();
-						if ($res2['grp_id'] != Obiwan::GROUP_SMALL && $res2['grp_id'] != Obiwan::GROUP_BIG)
-						{
-							$this->addError("Vous n'avez pas les droits pour faire cela.");
-							return $ret;
-						}
-					}
-
-					// Accès à tout pour le reste.
-					case Obiwan::GROUP_MANAGER:
-					case Obiwan::GROUP_ADMIN:
-					default: break;
-				}
-			}
-		}
-
-		try
-		{
-			$db = Obiwan::PDO();
-
-			$q = $db->query(self::$get_usr_query . "'$username'");
-
-			if(!$q or $q->rowCount() <= 0)
-				throw new Exception($db->errorInfo()[2]);
-			else
-				$ret->query_results = $q;
-		}
-		catch (Exception $e)
-		{
-			$ret->addError('Une erreur serveur est survenue. '. $e->getMessage());
-		}
-
-		if (!$ret->query_results)
-		{
-			$ret->addError("Aucun utilisateur n'a pour nom $username.");
-		}
-		else
-		{
-			$arr = $ret->query_results->fetchAll();
-			$ret->data = $arr[0];
-		}
-
-		return $ret;
-	}
-
-	/*!
 	 * \brief Tente la connexion de l'utilisateur envoyé en paramètre.
 	 * \param $array Array contenant les données de l'utilisateur.
 	 * 
 	 *  Tente la connexion de l'utilisateur. Récupère d'abord les données de
 	 * l'utilisateur grâce à getUserPrivate(), puis vérifie s'il n'y a pas
 	 * d'erreur. Ensuite, s'assure que les mots de passe correspondent puis
-	 * renvoie enfin l'utilisateur en question.
+	 * renvoie l'utilisateur en question, avec l'id de son groupe si
+	 * l'abonnement est à jour.
 	 */
 	public static function tryConnect($array)
 	{
+		// On récupère l'utilisateur.
 		$ret = ModelUser::getUserPrivate($array['cpt_pseudo'], false);
-		if (!$ret->hasErrors())
+
+		// S'il y a des erreurs ou que les mots de passe de concordent pas,
+		//  on stoppe la fonction en renvoyant le modèle contenant les erreurs.
+		if($ret->hasErrors())
+			return $ret;
+		else if($array['cpt_password'] != $ret->data['cpt_password'])
 		{
-			if ($array['cpt_password'] != $ret->data['cpt_password'])
-			{
-				$ret->addError('Mauvais mot de passe.');
-			}
+			$ret->addError('Mauvais mot de passe.');
+			return $ret;
 		}
+
+		// On récupère l'abonnement de l'utilisateur.
+		try {
+			$subs = ModelSubscription::getFromUser($ret->data['cpt_pseudo']);
+		} catch (Exception $ex) {
+		// S'il y a une exception, c'est qu'il n'en a probablement pas.
+		// On stoppe la fonction en renvoyant le modèle contenant les erreurs.
+			$ret->addError($ex->getMessage());
+			return $ret;
+		}
+
+		// Si l'utilisateur a un abonnement, il appartient à un groupe. On
+		//  ajoute l'id du groupe dans la session.
+		$_SESSION['grp_id'] = $subs->grp_id;
 
 		return $ret;
 	}

@@ -30,6 +30,10 @@ class Model
 		return $this->data[$var];
 	}
 
+	public function getData()
+	{
+		return $this->data;
+	}
 	/*!
 	 * \brief Renvoie s'il y a des erreurs ou non.
 	 * \return Un booléen.

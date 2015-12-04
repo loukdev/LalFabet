@@ -1,18 +1,19 @@
 				<aside>
 					<ul>
-						<li><a href="?signin">S'inscrire</a></li>
-						<li>
-            <?php	if(!isset($_SESSION['cpt_pseudo']))
+			<?php	if(!isset($_SESSION['cpt_pseudo']))
 					{ 
-					?>		<a href="?connect">Se connecter</a>
+					?>	<li><a href="?signin">S'inscrire</a></li>
+						<li>
+							<a href="?connect">Se connecter</a>
             <?php	}
 					else
 					{
-					?>		<a href="?disconnect">Se déconnecter (<?php echo $_SESSION['cpt_pseudo']; ?>)</a>
+					?>		<a href="?disconnect">Se déconnecter</a>
             <?php	}
 					if(isset($_SESSION['grp_id']))
 					{
-					?>		<a href="?user="<?php echo $_SESSION['cpt_pseudo']; ?>>Profil</a>
+						
+					?>	<li><a href="?user=<?php echo $_SESSION['cpt_pseudo']; ?>">Profil (<?php echo $_SESSION['cpt_pseudo']; ?>)</a></li>
 			<?php	}
 
 		?>	</li>

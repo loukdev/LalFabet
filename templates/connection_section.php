@@ -6,7 +6,7 @@ if ($this->model->hasErrors())
 	?>
  
 	<form style="margin: auto; margin-top: 50px; width: 400px; text-align: center;" id="inscription_form" method="post" action="?connect">
-		<span style="color: red;">Identifiants non valides.</span><br/>
+		<span style="color: red;">Identifiants non valides. <?php print_r($this->model->getErrors()); ?></span><br/>
 		<label for="cpt_pseudo">Identifiant :</label>
 		<input type="text" name="cpt_pseudo" id="cpt_pseudo" /> <br />
 
@@ -35,7 +35,7 @@ else
 	{
 		session_start();
 		$_SESSION["cpt_pseudo"] = $this->model->cpt_pseudo;
-		header("Location: ?user=" . $this->model->cpt_pseudo);
+		header("Location: ?");
 	}
 }
 
