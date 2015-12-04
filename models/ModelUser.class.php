@@ -384,60 +384,24 @@ class ModelUser extends Model implements IModel
 
 			// récupération du groupe de l'utilisateur
 			$db = Obiwan::PDO();
-			$q = $db->query("SELECT `grp_id`
+			$str = "SELECT `grp_id`
 							 FROM `t_groupe_grp`
 							 NATURAL JOIN `t_abonnement_abo`
 							 WHERE `cpt_pseudo` = '" . $_SESSION['cpt_pseudo'] . "'
-							   AND `abo_fin` > NOW()");
-															
+							   AND `abo_fin` > NOW()";
+			$q = $db->query($str);
+
 			// pas d'abonnement, pas de droit
-			if (!is_null($q))
+			if ($q->rowCount() <= 0)
 			{
-				$this->addError("Votre abonnement n'est pas à jour.");
+				$ret->addError("Votre abonnement n'est pas à jour.");
 				return $ret;
 			}
 
 			if ($_SESSION['cpt_pseudo'] != $username)
 			{
-
-			
-				$res = $q->fetchAll();
-				switch ($res['grp_id'])
-				{
-					// Pas de droit pour les petits/grands debrouillards.
-					case Obiwan::GROUP_SMALL:
-					case Obiwan::GROUP_BIG:
-						$this->addError("Vous n'avez pas les droits pour accéder à ces informations.");
-						return;
-
-					// Un animateur ne peut que accéder aux petits/grands debrouillards.
-					case Obiwan::GROUP_ANIMATOR:
-					{
-						$q2 = $db->query("SELECT `grp_id`
-									FROM `t_groupe_grp`
-									NATURAL JOIN `t_abonnement_abo`
-									WHERE `cpt_pseudo` = '" . $username . "'
-												AND `abo_fin` > NOW()");
-
-						// Pas d'abonnement, pas de droit.
-						if (!is_null($q))
-						{
-							$this->addError("Erreur.");
-							return $ret;
-						}
-						$res2 = $q2->fetchAll();
-						if ($res2['grp_id'] != Obiwan::GROUP_SMALL && $res2['grp_id'] != Obiwan::GROUP_BIG)
-						{
-							$this->addError("Vous n'avez pas les droits pour faire cela.");
-							return $ret;
-						}
-					}
-
-					// Accès à tout pour le reste.
-					case Obiwan::GROUP_MANAGER:
-					case Obiwan::GROUP_ADMIN:
-					default: break;
-				}
+				$ret->addError('Vous ne pouvez regarder que votre propre profil.');
+				return $ret;
 			}
 		}
 
